@@ -142,7 +142,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
         
         self.num_nodes, self.h_dim, self.out_dim = num_nodes, h_dim, out_dim
-        self.num_hidden_layers = 1
+        self.num_hidden_layers = 2
         self.num_rels = num_rels
         self.num_bases = num_bases
         # create rgcn layers

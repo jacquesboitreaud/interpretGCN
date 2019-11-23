@@ -34,7 +34,7 @@ if (__name__ == "__main__"):
     
     #Load train set and test set
     loaders = Loader(csv_path='../data/CHEMBL_18t.csv',
-                     n_mols=25000,
+                     n_mols=100000,
                      num_workers=4, 
                      batch_size=batch_size, 
                      shuffled= True)
