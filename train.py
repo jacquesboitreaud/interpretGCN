@@ -22,6 +22,7 @@ if (__name__ == "__main__"):
     from utils import *
     from viz import *
     from draw_mol import *
+    from rdkit_to_nx import *
     
     # config
     N=1 # num node features 
@@ -34,7 +35,7 @@ if (__name__ == "__main__"):
     
     #Load train set and test set
     loaders = Loader(csv_path='../data/CHEMBL_18t.csv',
-                     n_mols=100000,
+                     n_mols=1000,
                      num_workers=4, 
                      batch_size=batch_size, 
                      shuffled= True)
@@ -97,26 +98,25 @@ if (__name__ == "__main__"):
                 graph=send_graph_to_device(graph,device)
                 out=model(graph).squeeze()
                 
-                t_loss=F.mse_loss(out,target,reduction='sum')
+                t_loss+=F.mse_loss(out,target,reduction='sum')
+            
                 
                 # Try out attention
                 if(batch_idx==0):
-                    att= get_attention_map(graph, src_nodes=graph.nodes(), dst_nodes=graph.nodes(), h=1)
                     # Att has shape h, dest_nodes, src_nodes
                     # Sum of attention[1]=1 (attn weights sum to one for destination node)
                     
                     # Transform graph to RDKit molecule for nice visualization
                     graphs = dgl.unbatch(graph)
-                    g0=graphs[0]
+                    g0=graphs[18]
                     n_nodes = len(g0.nodes)
-                    att_g0 = att[0,:n_nodes,:n_nodes] # get attn weights only for g0
+                    att= get_attention_map(g0, src_nodes=g0.nodes(), dst_nodes=g0.nodes(), h=1)
+                    att_g0 = att[0] # get attn weights only for g0
                     
                     # Select atoms with highest attention weights and plot them 
                     tops = np.unique(np.where(att_g0>0.55)) # get top atoms in attention
                     mol = nx_to_mol(g0, rem, ram, rchim, rcham)
                     img=highlight(mol,list(tops))
-                
-                
                 
                 
             print(f'Validation loss at epoch {epoch}: {t_loss}')

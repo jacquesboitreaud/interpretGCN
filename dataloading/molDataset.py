@@ -106,7 +106,7 @@ class molDataset(Dataset):
         # Create dgl graph
         g_dgl = dgl.DGLGraph()
         g_dgl.from_networkx(nx_graph=graph, 
-                            node_attrs=['atomic_num','chiral_tag','formal_charge'],
+                            node_attrs=['atomic_num','chiral_tag','formal_charge','num_explicit_hs','is_aromatic'],
                             edge_attrs=['one_hot'])
 
         n_nodes = len(g_dgl.nodes())

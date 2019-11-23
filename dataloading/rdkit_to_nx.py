@@ -23,12 +23,9 @@ def mol_to_nx(mol):
         G.add_node(atom.GetIdx(),
                    atomic_num=atom.GetAtomicNum(),
                    formal_charge=atom.GetFormalCharge(),
-                   chiral_tag=atom.GetChiralTag())
-        
-                   # Optional attributes that can be added 
-                   #hybridization=atom.GetHybridization(),
-                   #num_explicit_hs=atom.GetNumExplicitHs(),
-                   #is_aromatic=atom.GetIsAromatic())
+                   chiral_tag=atom.GetChiralTag(),
+                   num_explicit_hs=atom.GetNumExplicitHs(),
+                   is_aromatic=atom.GetIsAromatic())
                    
     for bond in mol.GetBonds():
         G.add_edge(bond.GetBeginAtomIdx(),
@@ -43,7 +40,8 @@ def smiles_to_nx(smiles, validate=False):
 
 def nx_to_mol(G, edge_map, at_map, chi_map, charge_map):
     
-    G=G.to_networkx(node_attrs=['atomic_num','chiral_tag','formal_charge'], edge_attrs=['one_hot'])
+    G=G.to_networkx(node_attrs=['atomic_num','chiral_tag','formal_charge','num_explicit_hs','is_aromatic'], 
+                    edge_attrs=['one_hot'])
     G=G.to_undirected()
     
     # Map back one-hot encoded node features to actual values ! 
@@ -74,7 +72,8 @@ def nx_to_mol(G, edge_map, at_map, chi_map, charge_map):
             mol.AddBond(ifirst, isecond, bond_type)
         except(RuntimeError):
             continue
-
+    
+    #Uncomment to sanitize molecule
     Chem.SanitizeMol(mol)
     return mol
 
