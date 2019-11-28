@@ -127,8 +127,9 @@ if (__name__ == "__main__"):
                 
                 
             print(f'Validation loss at epoch {epoch}, per batch: {t_loss/len(test_loader)}')
-    
-    #Save model      
-    torch.save( model.state_dict(), SAVE_FILENAME)
-    print(f"model saved to {SAVE_FILENAME}")
+            
+        if(epoch%10==0):
+            #Save model : checkpoint      
+            torch.save( model.state_dict(), SAVE_FILENAME)
+            print(f"model saved to {SAVE_FILENAME}")
         
