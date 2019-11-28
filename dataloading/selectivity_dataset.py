@@ -4,11 +4,23 @@ Created on Sat Nov 23 16:02:53 2019
 
 @author: jacqu
 
-Build specific dataset for compound selectivity
+Build specific dataset for precise tasks:
+    - compound selectivity between 2 targets 
+    - predicting binding affinity for compounds assayed in CHEMBL 
 """
 
 import pandas as pd 
+import numpy as np
 
-df = pd.read_csv('../../data/CHEMBL_18t.csv', nrows=100)
+df = pd.read_csv('../data/HERG_dataset.csv')
+"""
+df=df[df['HERG']>0]
 
-print(df.columns)
+df=df.loc[:,['can','HERG']]
+
+max(df['HERG'])
+
+df['pIC50']=-np.log(1e-9*df['HERG'])
+
+df.to_csv('../HERG_dataset.csv')
+"""

@@ -136,20 +136,21 @@ class RGCNLayer(nn.Module):
 
 
 class Model(nn.Module):
-    # Computes 1D embeddings for all nodes
+    # Computes embeddings for all nodes
     # No features
-    def __init__(self,num_nodes, h_dim, out_dim , num_rels, num_bases=-1):
+    def __init__(self,num_node_feat, h_dim, out_dim , num_rels, num_bases=-1):
         super(Model, self).__init__()
         
-        self.num_nodes, self.h_dim, self.out_dim = num_nodes, h_dim, out_dim
-        self.num_hidden_layers = 2
+        self.num_node_feat, self.h_dim, self.out_dim = num_node_feat, h_dim, out_dim
+        self.num_hidden_layers = 4
         self.num_rels = num_rels
         self.num_bases = num_bases
         # create rgcn layers
         self.build_model()
         
         
-        self.attn = GATLayer(in_dim=self.num_nodes, out_dim=self.num_nodes)
+        self.attn = GATLayer(in_dim=self.num_node_feat, out_dim=self.num_node_feat)
+        self.dense = nn.Linear(self.num_node_feat,1)
         self.pool = SumPooling()
 
     def build_model(self):
@@ -162,7 +163,7 @@ class Model(nn.Module):
             h2h = self.build_hidden_layer()
             self.layers.append(h2h)
         # hidden to output
-        h2o = self.build_output_layer(out_dim=1)
+        h2o = self.build_output_layer(out_dim=self.out_dim)
         self.layers.append(h2o)
         
     def build_input_layer(self):
@@ -183,19 +184,12 @@ class Model(nn.Module):
              #print(g.ndata['h'].size())
              layer(g)
              #print(g.ndata['h'].size())
-        attention = self.attn(g,g.ndata['h'].view(-1,1))
+        attention = self.attn(g,g.ndata['h'].view(-1,self.out_dim))
         
         out=self.pool(g,attention)
+        out=self.dense(out)
+        #print(out.shape)
         
         # Return node embeddings 
         #return g.ndata['h']
         return out
-
-
-def simLoss(z1, z2, rmsd):
-    """ 
-    Loss function to force d(z1,z2) proportional to neighborhoods rmsd
-    """
-    d =z1-z2
-    d=d.pow(2)-rmsd
-    return d.pow(2)

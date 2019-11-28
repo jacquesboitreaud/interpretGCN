@@ -10,6 +10,7 @@ RGCN model to predict molecular LogP
 import sys
 import torch
 import dgl
+import pickle
 import torch.utils.data
 from torch import nn, optim
 import torch.nn.utils.clip_grad as clip
@@ -17,7 +18,7 @@ import torch.nn.functional as F
 
 if (__name__ == "__main__"):
     sys.path.append("./dataloading")
-    from rgcn import Model, simLoss
+    from rgcn import Model
     from molDataset import molDataset, Loader
     from utils import *
     from viz import *
@@ -25,20 +26,19 @@ if (__name__ == "__main__"):
     from rdkit_to_nx import *
     
     # config
-    N=1 # num node features 
-    N_types=44
-    n_hidden = 16 # number of hidden units
-    n_bases = -1 # use number of relations as number of bases
-    n_hidden_layers = 1 # use 1 input layer, 1 output layer, no hidden layer
-    n_epochs = 10 # epochs to train
-    batch_size = 40
+    n_epochs = 100 # epochs to train
+    batch_size = 128
+    display_test=False
+    SAVE_FILENAME='./saved_model_w/logp.pth'
+    #LOGS='./saved_model_w/logs_logp.npy'
     
     #Load train set and test set
-    loaders = Loader(csv_path='../data/CHEMBL_18t.csv',
-                     n_mols=1000,
+    loaders = Loader(csv_path='data/CHEMBL_18t.csv',
+                     n_mols=None,
                      num_workers=4, 
                      batch_size=batch_size, 
-                     shuffled= True)
+                     shuffled= True,
+                     target = 'logP')
     rem, ram, rchim, rcham = loaders.get_reverse_maps()
     
     train_loader, _, test_loader = loaders.get_data()
@@ -46,8 +46,14 @@ if (__name__ == "__main__"):
     #Model & hparams
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     parallel=False
+    params ={'num_node_feat':4, #node embedding dimension
+             'h_dim':16,
+             'out_dim':4,
+             'num_rels':loaders.num_edge_types,
+             'num_bases' :-1}
+    pickle.dump(params, open('saved_model_w/params.pickle','wb'))
 
-    model = Model(num_nodes=N, h_dim=16, out_dim=1, num_rels=N_types, num_bases=-1).to(device)
+    model = Model(**params).to(device)
     
     if (parallel): #torch.cuda.device_count() > 1 and
         print("Start training using ", torch.cuda.device_count(), "GPUs!")
@@ -61,15 +67,16 @@ if (__name__ == "__main__"):
     #optimizer = optim.Adam(model.parameters(),lr=1e-4, weight_decay=1e-5)
     
     #Train & test
+    model.train()
     for epoch in range(1, n_epochs+1):
         print(f'Starting epoch {epoch}')
-        model.train()
+
         for batch_idx, (graph, target) in enumerate(train_loader):
         
-            target=target.to(device).view(-1) # Graph-level target : (batch_size,)
+            target=target.to(device).view(-1,1) # Graph-level target : (batch_size,)
             # Embedding for each node
             graph=send_graph_to_device(graph,device)
-            out = model(graph).squeeze()
+            out = model(graph).view(-1,1)
             
             # print(out.shape)
             
@@ -83,7 +90,7 @@ if (__name__ == "__main__"):
             optimizer.step()
             
             #logs and monitoring
-            if batch_idx % 100 == 0:
+            if batch_idx % 10 == 0:
                 # log
                 print('ep {}, batch {}, loss : {:.2f} '.format(epoch, 
                       batch_idx, t_loss.item()))
@@ -94,15 +101,15 @@ if (__name__ == "__main__"):
         with torch.no_grad():
             for batch_idx, (graph, target) in enumerate(test_loader):
                 
-                target=target.to(device).view(-1) # Graph-level target : (batch_size,)
+                target=target.to(device).view(-1,1) # Graph-level target : (batch_size,)
                 graph=send_graph_to_device(graph,device)
-                out=model(graph).squeeze()
+                out=model(graph).view(-1,1)
                 
                 t_loss+=F.mse_loss(out,target,reduction='sum')
             
                 
                 # Try out attention
-                if(batch_idx==0):
+                if(batch_idx==0 and display_test):
                     # Att has shape h, dest_nodes, src_nodes
                     # Sum of attention[1]=1 (attn weights sum to one for destination node)
                     
@@ -119,5 +126,9 @@ if (__name__ == "__main__"):
                     img=highlight(mol,list(tops))
                 
                 
-            print(f'Validation loss at epoch {epoch}: {t_loss}')
+            print(f'Validation loss at epoch {epoch}, per batch: {t_loss/len(test_loader)}')
+    
+    #Save model      
+    torch.save( model.state_dict(), SAVE_FILENAME)
+    print(f"model saved to {SAVE_FILENAME}")
         

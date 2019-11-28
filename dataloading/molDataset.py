@@ -43,19 +43,24 @@ class molDataset(Dataset):
     """ 
     pytorch Dataset for training on pairs of nodes of RNA graphs 
     """
-    def __init__(self, csv_path="../../data/chembl_18t.csv",
+    def __init__(self, csv_path,
                 n_mols = 100,
                 emb_size=1,
                 debug=False, 
-                shuffled=False):
+                shuffled=False,
+                target ='LogP'):
         
-        self.df = pd.read_csv(csv_path, nrows=n_mols)
-        self.n = n_mols
+        if(n_mols!=None):
+            self.df = pd.read_csv(csv_path, nrows=n_mols)
+            self.n = n_mols
+        else:
+            self.df = pd.read_csv(csv_path)
+            self.n = self.df.shape[0]
         self.emb_size = emb_size
         
         # Choose targets for supervision: 
         #self.targets = np.load('../targets_chembl.npy') # load list of targets
-        self.targets = ['logP']
+        self.targets = [target]
         print(f'Labels retrieved for the following {len(self.targets)} targets: {self.targets}')
         
         # Load edge map
@@ -81,7 +86,7 @@ class molDataset(Dataset):
         # Annotated pickle files are tuples (g, dict of rmsds between nodepairs)
         
         row = self.df.iloc[idx]
-        print(row)
+        #print(row)
         
         smiles, targets = row['can'], np.array(row[self.targets],dtype=np.float32)
         
@@ -119,14 +124,18 @@ class Loader():
     def __init__(self,
                  csv_path,
                  n_mols,
+                 target,
                  emb_size=1,
                  batch_size=64,
                  num_workers=20,
                  debug=False,
-                 shuffled=False):
+                 shuffled=False,
+                 test_only=False):
         """
         Wrapper for test loader, train loader 
         Uncomment to add validation loader 
+        
+        if test_only: puts all molecules in csv in the test loader. Returns empty train and valid loaders
 
         """
 
@@ -135,8 +144,10 @@ class Loader():
         self.dataset = molDataset(csv_path, n_mols,
                                   emb_size,
                                   debug=debug,
-                                  shuffled=shuffled)
+                                  shuffled=shuffled,
+                                  target = target)
         self.num_edge_types = self.dataset.num_edge_types
+        self.test_only=test_only
         
     def get_maps(self):
         # Returns dataset mapping of edge and node features 
@@ -156,8 +167,13 @@ class Loader():
         indices = list(range(n))
         # np.random.shuffle(indices)
         np.random.seed(0)
-        split_train, split_valid = 0.8, 0.8
-        train_index, valid_index = int(split_train * n), int(split_valid * n)
+        if(not self.test_only):
+            split_train, split_valid = 0.8, 0.8
+            train_index, valid_index = int(split_train * n), int(split_valid * n)
+            
+        else:
+            split_train, split_valid = 0,0
+            train_index, valid_index = 0,0
         
         train_indices = indices[:train_index]
         valid_indices = indices[train_index:valid_index]
@@ -168,8 +184,8 @@ class Loader():
         test_set = Subset(self.dataset, test_indices)
         print(f"Train set contains {len(train_set)} samples")
 
-
-        train_loader = DataLoader(dataset=train_set, shuffle=True, batch_size=self.batch_size,
+        if(not self.test_only):
+            train_loader = DataLoader(dataset=train_set, shuffle=True, batch_size=self.batch_size,
                                   num_workers=self.num_workers, collate_fn=collate_block)
 
         # valid_loader = DataLoader(dataset=valid_set, shuffle=True, batch_size=self.batch_size,
@@ -180,7 +196,10 @@ class Loader():
 
 
         # return train_loader, valid_loader, test_loader
-        return train_loader, 0, test_loader
+        if(not self.test_only):
+            return train_loader, 0, test_loader
+        else:
+            return 0,0, test_loader
     
 if(__name__=='__main__'):
     d=molDataset()
