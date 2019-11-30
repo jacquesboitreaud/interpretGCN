@@ -34,3 +34,10 @@ def highlight(mol, atidxs):
     plt.show()
     return img
 
+def draw_smi(smiles):
+    mol=Chem.MolFromSmiles(smiles)
+    img = Chem.Draw.MolToImage(mol)
+    plt.imshow(img)
+    plt.show()
+    return img
+

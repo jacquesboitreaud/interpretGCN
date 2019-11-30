@@ -30,10 +30,13 @@ if (__name__ == "__main__"):
     batch_size = 128
     display_test=False
     SAVE_FILENAME='./saved_model_w/logp.pth'
+    model_path= 'saved_model_w/logp.pth'
+    
+    load_model = True
     #LOGS='./saved_model_w/logs_logp.npy'
     
     #Load train set and test set
-    loaders = Loader(csv_path='data/CHEMBL_18t.csv',
+    loaders = Loader(csv_path='data/moses_train.csv',
                      n_mols=None,
                      num_workers=0, 
                      batch_size=batch_size, 
@@ -54,6 +57,8 @@ if (__name__ == "__main__"):
     pickle.dump(params, open('saved_model_w/params.pickle','wb'))
 
     model = Model(**params).to(device)
+    if(load_model):
+        model.load_state_dict(torch.load(model_path))
     
     if (parallel): #torch.cuda.device_count() > 1 and
         print("Start training using ", torch.cuda.device_count(), "GPUs!")
@@ -112,18 +117,7 @@ if (__name__ == "__main__"):
                 if(batch_idx==0 and display_test):
                     # Att has shape h, dest_nodes, src_nodes
                     # Sum of attention[1]=1 (attn weights sum to one for destination node)
-                    
-                    # Transform graph to RDKit molecule for nice visualization
-                    graphs = dgl.unbatch(graph)
-                    g0=graphs[18]
-                    n_nodes = len(g0.nodes)
-                    att= get_attention_map(g0, src_nodes=g0.nodes(), dst_nodes=g0.nodes(), h=1)
-                    att_g0 = att[0] # get attn weights only for g0
-                    
-                    # Select atoms with highest attention weights and plot them 
-                    tops = np.unique(np.where(att_g0>0.55)) # get top atoms in attention
-                    mol = nx_to_mol(g0, rem, ram, rchim, rcham)
-                    img=highlight(mol,list(tops))
+                    print([(p,t) for (p,t) in zip(list(out.cpu().numpy()),list(target.cpu().numpy())) ] )
                 
                 
             print(f'Validation loss at epoch {epoch}, per batch: {t_loss/len(test_loader)}')
