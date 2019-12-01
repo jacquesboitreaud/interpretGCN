@@ -33,12 +33,12 @@ if (__name__ == "__main__"):
     model_path= 'saved_model_w/logp.pth'
     log_path='./saved_model_w/logs_logp.npy'
     
-    load_model = False
+    load_model = True
 
     
     #Load train set and test set
     loaders = Loader(csv_path='data/moses_train.csv',
-                     n_mols=1000,
+                     n_mols=1000000,
                      num_workers=0, 
                      batch_size=batch_size, 
                      shuffled= True,
