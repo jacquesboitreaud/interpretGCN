@@ -60,11 +60,13 @@ class GATLayer(nn.Module):
     
 """ RGCN layer to propagate message on different edge types """
 class RGCNLayer(nn.Module):
-    def __init__(self, in_feat, out_feat, num_rels, num_bases=-1, bias=None,
-                 activation=None, is_input_layer=False):
+    def __init__(self, in_dim, out_dim, num_rels, num_bases=-1, bias=None,
+                 activation=None, is_input_layer=False, features_dim=None):
         super(RGCNLayer, self).__init__()
-        self.in_feat = in_feat
-        self.out_feat = out_feat
+        self.in_dim=in_dim
+        if(is_input_layer):
+            self.n_atoms, self.n_charges = features_dim # to keep in memory for atom embedding at input layer 
+        self.out_dim = out_dim
         self.num_rels = num_rels
         self.num_bases = num_bases
         self.bias = bias
@@ -76,15 +78,15 @@ class RGCNLayer(nn.Module):
             self.num_bases = self.num_rels
 
         # weight bases in equation (3)
-        self.weight = nn.Parameter(torch.Tensor(self.num_bases, self.in_feat,
-                                                self.out_feat))
+        self.weight = nn.Parameter(torch.Tensor(self.num_bases, self.in_dim,
+                                                self.out_dim))
         if self.num_bases < self.num_rels:
             # linear combination coefficients in equation (3)
             self.w_comp = nn.Parameter(torch.Tensor(self.num_rels, self.num_bases))
 
         # add bias
         if self.bias:
-            self.bias = nn.Parameter(torch.Tensor(out_feat))
+            self.bias = nn.Parameter(torch.Tensor(self.out_dim))
 
         # init trainable parameters
         nn.init.xavier_uniform_(self.weight,
@@ -99,25 +101,30 @@ class RGCNLayer(nn.Module):
     def forward(self, g):
         if self.num_bases < self.num_rels:
             # generate all weights from bases (equation (3))
-            weight = self.weight.view(self.in_feat, self.num_bases, self.out_feat)
+            weight = self.weight.view(self.in_dim, self.num_bases, self.out_dim)
             weight = torch.matmul(self.w_comp, weight).view(self.num_rels,
-                                                        self.in_feat, self.out_feat)
+                                                        self.in_dim, self.out_dim)
         else:
             weight = self.weight
-
-        def message_func(edges):
-
-            # print(edges.data['one_hot'].size())
-            # print(weight.size(),weight)
-            w = weight[edges.data['one_hot']]
-            # print(w.size(),w)
-            msg = torch.bmm(edges.src['h'].unsqueeze(1), w).squeeze()
-            # msg = msg * edges.data['norm']
-            return {'msg': msg}
+            
+        if self.is_input_layer:
+            def message_func(edges):
+                # for input layer, matrix multiply can be converted to be
+                # an embedding lookup using source node atom type 
+                embed = weight.view(-1, self.out_dim)
+                index = edges.data['one_hot'] * self.n_atoms \
+                + edges.src['atomic_num']*self.n_charges \
+                +edges.src['formal_charge']
+                return {'msg': embed[index]}
+        else:
+            def message_func(edges):
+                w = weight[edges.data['one_hot']]
+                # print(w.size(),w)
+                msg = torch.bmm(edges.src['h'].unsqueeze(1), w).squeeze()
+                return {'msg': msg}
 
 
         def apply_func(nodes):
-
             h = nodes.data['h']
             if self.bias:
                 h = h + self.bias
@@ -129,28 +136,23 @@ class RGCNLayer(nn.Module):
         g.set_n_initializer(dgl.init.zero_initializer)
         g.update_all(message_func, fn.sum(msg='msg', out='h'), apply_func)
 
-        # print(self.in_feat,self.out_feat)
-        # print('h', g.ndata['h'].size())
-        # print('other',g.ndata['other'].size())
-        # g.ndata['h'] = g.ndata.pop('other')
-
 
 class Model(nn.Module):
     # Computes embeddings for all nodes
     # No features
-    def __init__(self,num_node_feat, h_dim, out_dim , num_rels, num_bases=-1):
+    def __init__(self, atom_types, charges, h_dim, out_dim , num_rels, num_bases=-1, num_hidden_layers=2):
         super(Model, self).__init__()
         
-        self.num_node_feat, self.h_dim, self.out_dim = num_node_feat, h_dim, out_dim
-        self.num_hidden_layers = 4
+        self.atom_types, self.charges, self.h_dim, self.out_dim = atom_types, charges, h_dim, out_dim
+        self.num_hidden_layers = num_hidden_layers
         self.num_rels = num_rels
         self.num_bases = num_bases
         # create rgcn layers
         self.build_model()
         
         
-        self.attn = GATLayer(in_dim=self.num_node_feat, out_dim=self.num_node_feat)
-        self.dense = nn.Linear(self.num_node_feat,1)
+        self.attn = GATLayer(in_dim=self.out_dim, out_dim=self.out_dim)
+        self.dense = nn.Linear(self.out_dim,1)
         self.pool = SumPooling()
 
     def build_model(self):
@@ -167,8 +169,8 @@ class Model(nn.Module):
         self.layers.append(h2o)
         
     def build_input_layer(self):
-        return RGCNLayer(1, self.h_dim, self.num_rels, self.num_bases,
-                         activation=F.relu, is_input_layer=True)
+        return RGCNLayer(self.atom_types*self.charges, self.h_dim, self.num_rels, self.num_bases,
+                         activation=F.relu, is_input_layer=True, features_dim=(self.atom_types,self.charges))
 
     def build_hidden_layer(self):
         return RGCNLayer(self.h_dim, self.h_dim, self.num_rels, self.num_bases,
@@ -181,6 +183,7 @@ class Model(nn.Module):
     def forward(self, g):
         #print('edge data size ', g.edata['one_hot'].size())
         for layer in self.layers:
+             #g.ndata['h']=torch.cat([g.ndata['formal_charge'].unsqueeze(1), g.ndata['atomic_num'].unsqueeze(1)], dim=1)
              #print(g.ndata['h'].size())
              layer(g)
              #print(g.ndata['h'].size())

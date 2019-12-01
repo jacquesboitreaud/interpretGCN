@@ -37,7 +37,7 @@ if(__name__=='__main__'):
     # Get vocabulary of substructures 
     vocab_dict = {s:i for (i,s) in enumerate(vocab)}
     
-    loader = Loader(csv_path='data/test_set.csv',
+    loader = Loader(csv_path='data/handmade.csv',
                      n_mols=2,
                      num_workers=0, 
                      batch_size=2, 
@@ -94,5 +94,5 @@ if(__name__=='__main__'):
     #Compute frequencies for substructures in the dataset 
     freqs = {k: v[0]/v[1] for (k,v) in chem_att.items() if v[1]>0}
     
-    # Analyse 
+    #TODO: plot / draw substructures that get attention and those that do not, at a large scale (moses test) ? 
                         

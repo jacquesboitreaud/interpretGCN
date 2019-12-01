@@ -31,13 +31,14 @@ if (__name__ == "__main__"):
     display_test=False
     SAVE_FILENAME='./saved_model_w/logp.pth'
     model_path= 'saved_model_w/logp.pth'
+    log_path='./saved_model_w/logs_logp.npy'
     
-    load_model = True
-    #LOGS='./saved_model_w/logs_logp.npy'
+    load_model = False
+
     
     #Load train set and test set
     loaders = Loader(csv_path='data/moses_train.csv',
-                     n_mols=None,
+                     n_mols=1000000,
                      num_workers=0, 
                      batch_size=batch_size, 
                      shuffled= True,
@@ -46,14 +47,20 @@ if (__name__ == "__main__"):
     
     train_loader, _, test_loader = loaders.get_data()
     
+    # Logs
+    logs_dict = {'train_mse':[],
+                 'test_mse':[]}
+    
     #Model & hparams
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     parallel=False
-    params ={'num_node_feat':4, #node embedding dimension
+    params ={'atom_types':loaders.num_atom_types, #node embedding dimension
+             'charges': loaders.num_charges,
              'h_dim':16,
              'out_dim':4,
              'num_rels':loaders.num_edge_types,
-             'num_bases' :-1}
+             'num_bases' :-1,
+             'num_hidden_layers':2}
     pickle.dump(params, open('saved_model_w/params.pickle','wb'))
 
     model = Model(**params).to(device)
@@ -75,6 +82,7 @@ if (__name__ == "__main__"):
     model.train()
     for epoch in range(1, n_epochs+1):
         print(f'Starting epoch {epoch}')
+        epoch_loss=0
 
         for batch_idx, (graph, target) in enumerate(train_loader):
         
@@ -87,6 +95,7 @@ if (__name__ == "__main__"):
             
             #Compute loss : change according to supervision 
             t_loss=F.mse_loss(out,target,reduction='sum')
+            epoch_loss+=t_loss.item()
             
             # backward loss 
             optimizer.zero_grad()
@@ -95,7 +104,7 @@ if (__name__ == "__main__"):
             optimizer.step()
             
             #logs and monitoring
-            if batch_idx % 10 == 0:
+            if batch_idx % 100 == 0:
                 # log
                 print('ep {}, batch {}, loss : {:.2f} '.format(epoch, 
                       batch_idx, t_loss.item()))
@@ -121,9 +130,12 @@ if (__name__ == "__main__"):
                 
                 
             print(f'Validation loss at epoch {epoch}, per batch: {t_loss/len(test_loader)}')
+            logs_dict['test_mse'].append(t_loss/len(test_loader))
+            logs_dict['train_mse'].append(epoch_loss/len(train_loader))
             
-        if(epoch%10==0):
+        if(epoch%5==0):
             #Save model : checkpoint      
             torch.save( model.state_dict(), SAVE_FILENAME)
+            pickle.dump(logs_dict, open(log_path,'wb'))
             print(f"model saved to {SAVE_FILENAME}")
         

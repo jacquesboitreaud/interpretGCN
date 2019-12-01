@@ -146,7 +146,8 @@ class Loader():
                                   debug=debug,
                                   shuffled=shuffled,
                                   target = target)
-        self.num_edge_types = self.dataset.num_edge_types
+        self.num_edge_types, self.num_atom_types = self.dataset.num_edge_types, self.dataset.num_atom_types
+        self.num_charges= self.dataset.num_charges
         self.test_only=test_only
         
     def get_maps(self):
@@ -168,7 +169,7 @@ class Loader():
         # np.random.shuffle(indices)
         np.random.seed(0)
         if(not self.test_only):
-            split_train, split_valid = 0.8, 0.8
+            split_train, split_valid = 0.9, 0.9
             train_index, valid_index = int(split_train * n), int(split_valid * n)
             
         else:
