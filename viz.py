@@ -22,8 +22,8 @@ def get_attention_map(g, src_nodes, dst_nodes, h):
     h: number of dims of embeddings 
     """
     n, m = len(src_nodes), len(dst_nodes)
-    # Print number of source nodes and destination nodes in the set : 
-    print(f'{n} source nodes considered, {m} target nodes')
+    # Print number of source nodes and destination nodes in the graph 
+    #print(f'{n} source nodes considered, {m} target nodes')
     weight = th.zeros(n, m, h).fill_(-1e8)
     
     for i, src in enumerate(src_nodes.tolist()):

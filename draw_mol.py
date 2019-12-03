@@ -16,8 +16,16 @@ from rdkit.Chem import rdDepictor
 rdDepictor.SetPreferCoordGen(True)
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Chem.Draw import IPythonConsole
+from rdkit.Chem.Draw import MolsToGridImage
+from rdkit.Chem.Draw import DrawingOptions
+
+DrawingOptions.atomLabelFontSize = 55
+DrawingOptions.dotsPerAngstrom = 2000
+DrawingOptions.bondLineWidth = 2
+
+
 from IPython.display import SVG, Image
-IPythonConsole.molSize = (400,400)
+IPythonConsole.molSize = (800,800)
 
 if (__name__ == "__main__"):
     sys.path.append("./dataloading")
@@ -41,3 +49,13 @@ def draw_smi(smiles):
     plt.show()
     return img
 
+def draw_multi(smiles):
+    # list of smiles 
+    mols=[Chem.MolFromSmiles(s) for s in smiles]
+    img = MolsToGridImage(mols, molsPerRow=7,maxMols=60, subImgSize=(100, 100), legends=[str(i) for i in range(len(mols))])
+    return img
+
+def num_atoms(s):
+    # smiles as input
+    m=Chem.MolFromSmiles(s)
+    return m.GetNumAtoms()

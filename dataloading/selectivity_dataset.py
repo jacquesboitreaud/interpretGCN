@@ -13,6 +13,9 @@ import pandas as pd
 import numpy as np
 
 df = pd.read_csv('../data/HERG_dataset.csv')
+
+df2 = pd.read_csv('../data/CHEMBL_18t.csv')
+df2=df2[df2['HERG']<=0]
 """
 df=df[df['HERG']>0]
 

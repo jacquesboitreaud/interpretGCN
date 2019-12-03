@@ -27,22 +27,22 @@ if (__name__ == "__main__"):
     
     # config
     n_epochs = 100 # epochs to train
-    batch_size = 128
+    batch_size = 64
     display_test=False
-    SAVE_FILENAME='./saved_model_w/logp.pth'
-    model_path= 'saved_model_w/logp.pth'
-    log_path='./saved_model_w/logs_logp.npy'
+    SAVE_FILENAME='./saved_model_w/herg.pth'
+    model_path= 'saved_model_w/herg.pth'
+    log_path='./saved_model_w/logs_herg.npy'
     
-    load_model = True
+    load_model = False
 
     
     #Load train set and test set
-    loaders = Loader(csv_path='data/moses_train.csv',
-                     n_mols=1000000,
+    loaders = Loader(csv_path='data/HERG_dataset.csv',
+                     n_mols=None,
                      num_workers=0, 
                      batch_size=batch_size, 
                      shuffled= True,
-                     target = 'logP')
+                     target = 'pIC50')
     rem, ram, rchim, rcham = loaders.get_reverse_maps()
     
     train_loader, _, test_loader = loaders.get_data()
