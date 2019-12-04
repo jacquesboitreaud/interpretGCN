@@ -12,18 +12,11 @@ Build specific dataset for precise tasks:
 import pandas as pd 
 import numpy as np
 
-df = pd.read_csv('../data/HERG_dataset.csv')
+df = pd.read_csv('../data/HERG_2classes.csv')
 
-df2 = pd.read_csv('../data/CHEMBL_18t.csv')
-df2=df2[df2['HERG']<=0]
-"""
-df=df[df['HERG']>0]
+b=list(df['pIC50'])
+b= [int(x>0) for x in b]
 
-df=df.loc[:,['can','HERG']]
+df['binary']=b
 
-max(df['HERG'])
-
-df['pIC50']=-np.log(1e-9*df['HERG'])
-
-df.to_csv('../HERG_dataset.csv')
-"""
+df.to_csv('../data/HERG_2classes.csv')

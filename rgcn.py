@@ -140,7 +140,7 @@ class RGCNLayer(nn.Module):
 class Model(nn.Module):
     # Computes embeddings for all nodes
     # No features
-    def __init__(self, atom_types, charges, h_dim, out_dim , num_rels, num_bases=-1, num_hidden_layers=2):
+    def __init__(self, atom_types, charges, h_dim, out_dim , num_rels, num_bases=-1, num_hidden_layers=2, classifier=False):
         super(Model, self).__init__()
         
         self.atom_types, self.charges, self.h_dim, self.out_dim = atom_types, charges, h_dim, out_dim
@@ -154,6 +154,7 @@ class Model(nn.Module):
         self.attn = GATLayer(in_dim=self.out_dim, out_dim=self.out_dim)
         self.dense = nn.Linear(self.out_dim,1)
         self.pool = SumPooling()
+        self.is_classifier=classifier
 
     def build_model(self):
         self.layers = nn.ModuleList()
@@ -191,6 +192,8 @@ class Model(nn.Module):
         
         out=self.pool(g,attention)
         out=self.dense(out)
+        if(self.is_classifier):
+            out=F.sigmoid(out)
         #print(out.shape)
         
         # Return node embeddings 
