@@ -92,7 +92,6 @@ if (__name__ == "__main__"):
             # Embedding for each node
             graph=send_graph_to_device(graph,device)
             out = model(graph).view(-1,1)
-            print(out, target)
             
             # print(out.shape)
             
