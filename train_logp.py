@@ -38,7 +38,7 @@ if (__name__ == "__main__"):
     
     #Load train set and test set
     loaders = Loader(csv_path='data/moses_train.csv',
-                     n_mols=100000,
+                     n_mols=1000000,
                      num_workers=0, 
                      batch_size=batch_size, 
                      shuffled= True,

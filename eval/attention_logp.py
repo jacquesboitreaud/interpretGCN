@@ -5,6 +5,8 @@ Created on Thu Nov 28 10:52:46 2019
 @author: jacqu
 
 Distribution of attention over substructures, over the test set 
+
+Run in working dir ../
 """
 import torch
 import torch.nn.functional as F
