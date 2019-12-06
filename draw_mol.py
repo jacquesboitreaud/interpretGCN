@@ -32,12 +32,13 @@ if (__name__ == "__main__"):
     from rdkit_to_nx import *
     
     
-def highlight(mol, atidxs):
+def highlight(mol, atidxs, color=[1,0.7,0]):
     # Prints a depiction of molecule object with list of atoms highlighted 
     # Can also be done for a list of bonds
+    #color : RGB tuple, size 3
     highlighted = atidxs
     plt.figure(figsize = (10,4)) # w*h
-    img = Chem.Draw.MolToImage(mol, highlightAtoms=atidxs, highlightColor=[1,0.7,0]) # highlight in orange
+    img = Chem.Draw.MolToImage(mol, highlightAtoms=atidxs, highlightColor=color) # highlight in orange
     plt.imshow(img)
     plt.show()
     return img

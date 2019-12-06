@@ -33,7 +33,7 @@ if (__name__ == "__main__"):
     model_path= 'saved_model_w/herg.pth'
     log_path='./saved_model_w/logs_herg.npy'
     
-    load_model = False
+    load_model = True
 
     
     #Load train set and test set
