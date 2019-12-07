@@ -21,7 +21,7 @@ from draw_mol import *
 from rdkit_to_nx import *
 from viz import *
 
-from rgcn_lowdim import Model
+from rgcn_onehot import Model
 from molDataset import Loader, molDataset
 from integratedGrad import IntegratedGradients
 
@@ -59,27 +59,32 @@ inteGrad = IntegratedGradients(model)
 
 # Get first molecule of first batch 
 m = 0
+nodes = -1
+feat=5 # which feature (one hots )
+
+
 graph, target = next(iter(test_loader))
 graphs = dgl.unbatch(graph)
 x, target = graphs[m], target[m]
-out = model(x)
+out = model(graph)[m]
 print(f'Predicted logp is {out.item()}, true is {target.item()}')
-attrib = inteGrad.attribute(x, -1)
+attrib = inteGrad.node_attrib(x, nodes)
 
 # Problem : each embedding is 16-dimensional at the moment ... 
-x.edata['ig']=attrib
+x.ndata['ig']=attrib
 
 # Select + and - edges (atoms):
-x=x.to_networkx(node_attrs=['atomic_num','chiral_tag','formal_charge','num_explicit_hs','is_aromatic'], 
-                    edge_attrs=['one_hot','ig'])
+x=x.to_networkx(node_attrs=['atomic_num','chiral_tag','formal_charge','num_explicit_hs','is_aromatic','ig'], 
+                    edge_attrs=['one_hot'])
 x=x.to_undirected()
 positives, negatives =set(), set()
-for (src,dst, data) in x.edges(data=True):
-    if(data['ig'].item()>0):
-        positives.add(src)
-    elif(data['ig'].item()<0):
-        negatives.add(src)
+for (i, data) in x.nodes(data=True):
+    if(data['ig'][feat].item()>0):
+        positives.add(i)
+    elif(data['ig'][feat].item()<0):
+        negatives.add(i)
 
+#TODO :adapt nx to mol function so that it can handle one-hot vectors for features ! 
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
 # To networkx and plot with colored bonds 
 img=highlight(mol,list(positives), color= [0,1,0]) #green

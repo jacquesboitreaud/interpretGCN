@@ -15,47 +15,40 @@ from copy import deepcopy
 class IntegratedGradients():
     def __init__(self, model):
         self.model = model 
-        self.n_atoms, self.n_charges, self.n_rels = model.atom_types, model.charges, model.num_rels
+        self.features_dim, self.n_rels = model.features_dim, model.num_rels
         self.model.train()
         
-    def attribute(self, x, edges_idx):
-        # x is input graph (dgl), edges_idx is a list of the indices of edges for which we examine the contribution
-        if(edges_idx==-1):
-            edges_idx=np.arange(len(x.edges()[0])) # Do it for all edges in graph
-        ig = torch.zeros(len(edges_idx),self.model.layers[0].out_dim)
-        
+    def node_attrib(self, x, nodes_idx):
+        # Attribution for a node or list of nodes
+        if(nodes_idx==-1):
+            nodes_idx=[i for i in range(len(x.nodes()))]
+        ig = torch.zeros(len(nodes_idx),self.features_dim)
         # number of rectangles for integral approx : 
         m=20
         
-        # x is input, edge_index is the index of the edge we remove (in x.edges())
-        edges=x.find_edges(edges_idx)
-        src_nodes = edges[0] # we don't need destination nodes
-        lookup_indexes = [x.edata['one_hot'][i] * self.n_atoms \
-                + x.ndata['atomic_num'][src]*self.n_charges \
-                +x.ndata['formal_charge'][src] for i,src in enumerate(src_nodes)]
-         
         # Loop to compute integrated grad 
-        embed = deepcopy(self.model.layers[0].weight.view(-1,self.model.layers[0].out_dim).detach().numpy())
+        x_h = deepcopy(x.ndata['h'].detach())
+        
         for k in range(m):
              alpha=k/m
              with torch.no_grad():
-                 for i in lookup_indexes:
+                 x.ndata['h']=x_h # reset features to initial
+                 for i in nodes_idx:
                      # interpolate : 0 + (k/m) * embedding
-                     self.model.layers[0].weight.view(-1,self.model.layers[0].out_dim)[i]=alpha*torch.tensor(embed[i]) 
+                     x.ndata['h'][i]=0 + alpha* x_h[i]
+                     #print(x.ndata['h'])
                      
-                     #print interpolated embeddings
-                     #print(self.model.layers[0].weight.view(-1,self.model.layers[0].out_dim)[i])
-                     
-             
-             #Compute grads 
+            #Compute grads 
+             self.model.zero_grad()
+             x.ndata['in']=x.ndata['h']
+             x.ndata['in'].requires_grad_(True)
              out = self.model(x)
-             torch.autograd.backward(out, self.model.layers[0].weight)
-             g= self.model.layers[0].weight.grad.view(-1,self.model.layers[0].out_dim)
-             #g = torch.autograd.grad(out[0],self.model.layers[0].weight, allow_unused=True)
-             ig+=g[lookup_indexes,]
+             g=torch.autograd.grad(out, x.ndata['in'])[0] # list of gradients wrt inputs
+             print(x.ndata['in'].shape)
+             ig+=g[nodes_idx,]
+             
              #print(g[lookup_indexes,])
-             #print(ig)
-        
+        ig=ig/m
         return ig
     
 

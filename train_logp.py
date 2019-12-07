@@ -18,7 +18,7 @@ import torch.nn.functional as F
 
 if (__name__ == "__main__"):
     sys.path.append("./dataloading")
-    from rgcn_lowdim import Model
+    from rgcn_onehot import Model
     from molDataset import molDataset, Loader
     from utils import *
     from viz import *
@@ -27,7 +27,7 @@ if (__name__ == "__main__"):
     
     # config
     n_epochs = 100 # epochs to train
-    batch_size = 64
+    batch_size = 128
     display_test=False
     SAVE_FILENAME='./saved_model_w/logp_lowd.pth'
     model_path= 'saved_model_w/logp.pth'
@@ -54,8 +54,7 @@ if (__name__ == "__main__"):
     #Model & hparams
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     parallel=False
-    params ={'atom_types':loaders.num_atom_types, #node embedding dimension
-             'charges': loaders.num_charges,
+    params ={'features_dim':loaders.dataset.emb_size, #node embedding dimension
              'h_dim':16,
              'out_dim':4,
              'num_rels':loaders.num_edge_types,

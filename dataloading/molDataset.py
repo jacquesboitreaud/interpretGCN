@@ -38,6 +38,11 @@ def collate_block(samples):
     
     return batched_graph, labels
 
+def oh_tensor(category, n):
+    t = torch.zeros(n,dtype=torch.float)
+    t[category]=1
+    return t
+
 
 class molDataset(Dataset):
     """ 
@@ -45,7 +50,6 @@ class molDataset(Dataset):
     """
     def __init__(self, csv_path,
                 n_mols = 100,
-                emb_size=1,
                 debug=False, 
                 shuffled=False,
                 target ='LogP'):
@@ -56,7 +60,6 @@ class molDataset(Dataset):
         else:
             self.df = pd.read_csv(csv_path)
             self.n = self.df.shape[0]
-        self.emb_size = emb_size
         
         # Choose targets for supervision: 
         #self.targets = np.load('../targets_chembl.npy') # load list of targets
@@ -73,6 +76,8 @@ class molDataset(Dataset):
         self.num_edge_types, self.num_atom_types = len(self.edge_map), len(self.at_map)
         self.num_charges, self.num_chir = len(self.charges_map), len(self.chi_map)
         print('Loaded edge and atoms types maps.')
+        
+        self.emb_size = self.num_atom_types + self.num_charges # node embedding size
         
         if(debug):
             # special case for debugging
@@ -96,13 +101,14 @@ class molDataset(Dataset):
                    (nx.get_edge_attributes(graph, 'bond_type')).items()}
         nx.set_edge_attributes(graph, name='one_hot', values=one_hot)
         
-        at_type = {a: torch.tensor(self.at_map[label]) for a, label in
+        at_type = {a: oh_tensor(self.at_map[label], self.num_atom_types) for a, label in
                    (nx.get_node_attributes(graph, 'atomic_num')).items()}
         nx.set_node_attributes(graph, name='atomic_num', values=at_type)
         
-        at_charge = {a: torch.tensor(self.charges_map[label]) for a, label in
+        at_charge = {a: oh_tensor(self.charges_map[label], self.num_charges) for a, label in
                    (nx.get_node_attributes(graph, 'formal_charge')).items()}
         nx.set_node_attributes(graph, name='formal_charge', values=at_charge)
+        
         
         at_chir = {a: torch.tensor(self.chi_map[label]) for a, label in
                    (nx.get_node_attributes(graph, 'chiral_tag')).items()}
@@ -114,8 +120,7 @@ class molDataset(Dataset):
                             node_attrs=['atomic_num','chiral_tag','formal_charge','num_explicit_hs','is_aromatic'],
                             edge_attrs=['one_hot'])
 
-        n_nodes = len(g_dgl.nodes())
-        g_dgl.ndata['h'] = torch.ones((n_nodes, self.emb_size)) # nodes embeddings 
+        g_dgl.ndata['h'] =torch.cat([g_dgl.ndata['formal_charge'], g_dgl.ndata['atomic_num']], dim=1)
         
         return g_dgl, targets
         
@@ -125,7 +130,6 @@ class Loader():
                  csv_path,
                  n_mols,
                  target,
-                 emb_size=1,
                  batch_size=64,
                  num_workers=20,
                  debug=False,
@@ -142,10 +146,10 @@ class Loader():
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.dataset = molDataset(csv_path, n_mols,
-                                  emb_size,
                                   debug=debug,
                                   shuffled=shuffled,
                                   target = target)
+        
         self.num_edge_types, self.num_atom_types = self.dataset.num_edge_types, self.dataset.num_atom_types
         self.num_charges= self.dataset.num_charges
         self.test_only=test_only
