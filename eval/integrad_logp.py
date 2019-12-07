@@ -58,9 +58,9 @@ inteGrad = IntegratedGradients(model)
 
 
 # Get first molecule of first batch 
-m = 0
+m = 1
 nodes = -1
-feat=5 # which feature (one hots )
+feat=8 # which feature (one hots )
 
 
 graph, target = next(iter(test_loader))
@@ -68,10 +68,12 @@ graphs = dgl.unbatch(graph)
 x, target = graphs[m], target[m]
 out = model(graph)[m]
 print(f'Predicted logp is {out.item()}, true is {target.item()}')
-attrib = inteGrad.node_attrib(x, nodes)
+attrib, delta = inteGrad.node_attrib(x, nodes)
 
 # Problem : each embedding is 16-dimensional at the moment ... 
 x.ndata['ig']=attrib
+
+print(torch.sum(attrib).item(), delta)
 
 # Select + and - edges (atoms):
 x=x.to_networkx(node_attrs=['atomic_num','chiral_tag','formal_charge','num_explicit_hs','is_aromatic','ig'], 
@@ -84,7 +86,8 @@ for (i, data) in x.nodes(data=True):
     elif(data['ig'][feat].item()<0):
         negatives.add(i)
 
-#TODO :adapt nx to mol function so that it can handle one-hot vectors for features ! 
+
+#TODO :adapt nx to mol function so that it can handle one-hot vectors for features !!!!!!!!!!!!!!!
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
 # To networkx and plot with colored bonds 
 img=highlight(mol,list(positives), color= [0,1,0]) #green

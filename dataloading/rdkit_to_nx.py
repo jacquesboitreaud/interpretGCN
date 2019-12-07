@@ -13,6 +13,7 @@ import networkx as nx
 import argparse
 import multiprocessing
 from rdkit import Chem
+import torch
 
 import dgl
 
@@ -45,9 +46,9 @@ def nx_to_mol(G, edge_map, at_map, chi_map, charge_map):
         G=G.to_undirected()
     
     # Map back one-hot encoded node features to actual values ! 
-    atomic_nums={i: at_map[v.item()] for (i,v) in nx.get_node_attributes(G, 'atomic_num').items()}
-    chiral_tags={i: chi_map[v.item()] for (i,v) in nx.get_node_attributes(G, 'chiral_tag').items()}
-    formal_charges={i: charge_map[v.item()] for (i,v) in nx.get_node_attributes(G, 'formal_charge').items()}
+    atomic_nums={i: at_map[torch.argmax(v).item()] for (i,v) in nx.get_node_attributes(G, 'atomic_num').items()}
+    chiral_tags={i: chi_map[torch.argmax(v).item()] for (i,v) in nx.get_node_attributes(G, 'chiral_tag').items()}
+    formal_charges={i: charge_map[torch.argmax(v).item()] for (i,v) in nx.get_node_attributes(G, 'formal_charge').items()}
     
     bond_types={i: edge_map[v.item()] for (i,v) in nx.get_edge_attributes(G, 'one_hot').items()}
     

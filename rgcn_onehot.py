@@ -72,7 +72,7 @@ class Model(nn.Module):
         out=self.pool(g,g.ndata['h'].view(len(g.nodes),-1,self.out_dim))
         out=self.dense(out)
         if(self.is_classifier):
-            out=F.sigmoid(out)
+            out=torch.sigmoid(out)
         #print(out.shape)
         
         return out

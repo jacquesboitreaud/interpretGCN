@@ -24,18 +24,18 @@ class IntegratedGradients():
             nodes_idx=[i for i in range(len(x.nodes()))]
         ig = torch.zeros(len(nodes_idx),self.features_dim)
         # number of rectangles for integral approx : 
-        m=20
+        m=50
         
         # Loop to compute integrated grad 
-        x_h = deepcopy(x.ndata['h'].detach())
+        x_h = x.ndata['h'].detach().numpy()
         
         for k in range(m):
              alpha=k/m
              with torch.no_grad():
-                 x.ndata['h']=x_h # reset features to initial
+                 x.ndata['h']=deepcopy(x_h) # reset features to initial
                  for i in nodes_idx:
                      # interpolate : 0 + (k/m) * embedding
-                     x.ndata['h'][i]=0 + alpha* x_h[i]
+                     x.ndata['h'][i]=0 + alpha* torch.tensor(x_h[i])
                      #print(x.ndata['h'])
                      
             #Compute grads 
@@ -43,13 +43,18 @@ class IntegratedGradients():
              x.ndata['in']=x.ndata['h']
              x.ndata['in'].requires_grad_(True)
              out = self.model(x)
+             if(k==0):
+                 baseline_out = out.item()
+                 print(baseline_out)
+             elif(k==m-1):
+                 x_out = out.item()
+                 print(x_out)
              g=torch.autograd.grad(out, x.ndata['in'])[0] # list of gradients wrt inputs
-             print(x.ndata['in'].shape)
              ig+=g[nodes_idx,]
              
              #print(g[lookup_indexes,])
         ig=ig/m
-        return ig
+        return ig, x_out-baseline_out
     
 
         
