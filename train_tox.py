@@ -94,7 +94,7 @@ if (__name__ == "__main__"):
             # print(out.shape)
             
             #Compute loss : change according to supervision 
-            t_loss=F.mse_loss(out,target,reduction='sum')
+            t_loss=F.binary_cross_entropy(out,target,reduction='sum')
             epoch_loss+=t_loss.item()
             
             # backward loss 
@@ -119,7 +119,7 @@ if (__name__ == "__main__"):
                 graph=send_graph_to_device(graph,device)
                 out=model(graph).view(-1,1)
                 
-                t_loss+=F.mse_loss(out,target,reduction='sum')
+                t_loss+=F.binary_cross_entropy(out,target,reduction='sum')
             
                 
                 # Try out attention
