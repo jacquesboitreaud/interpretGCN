@@ -31,6 +31,4 @@ def send_graph_to_device(g, device):
     for i, l in enumerate(labels.keys()):
         g.edata[l] = g.edata.pop(l).to(device, non_blocking=True)
     return g
-
-
     

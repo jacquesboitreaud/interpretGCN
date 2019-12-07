@@ -38,10 +38,13 @@ def highlight(mol, atidxs, color=[1,0.7,0]):
     #color : RGB tuple, size 3
     highlighted = atidxs
     plt.figure(figsize = (10,4)) # w*h
-    img = Chem.Draw.MolToImage(mol, highlightAtoms=atidxs, highlightColor=color) # highlight in orange
+    img = Chem.Draw.MolToImage(mol, highlightAtoms=atidxs, highlightColor=color, includeAtomNumbers=False)
     plt.imshow(img)
+    plt.figure(figsize = (10,4)) # w*h
+    img2 = Chem.Draw.MolToImage(mol, highlightAtoms=atidxs, highlightColor=color, includeAtomNumbers=True)
+    plt.imshow(img2)
     plt.show()
-    return img
+    return img, img2
 
 def draw_smi(smiles):
     mol=Chem.MolFromSmiles(smiles)
