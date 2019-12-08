@@ -12,35 +12,31 @@ import dgl
 import matplotlib.pyplot as plt
 
 from rdkit import Chem
-from rdkit.Chem import rdDepictor
-rdDepictor.SetPreferCoordGen(True)
-from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Chem import ChemicalFeatures
+from rdkit import rdBase
+from rdkit.RDPaths import RDDocsDir
+from rdkit.RDPaths import RDDataDir
 from rdkit.Chem.Draw import IPythonConsole
-from rdkit.Chem.Draw import MolsToGridImage
-from rdkit.Chem.Draw import DrawingOptions
-
-DrawingOptions.atomLabelFontSize = 55
-DrawingOptions.dotsPerAngstrom = 2000
-DrawingOptions.bondLineWidth = 2
-
-
-from IPython.display import SVG, Image
-IPythonConsole.molSize = (800,800)
+from rdkit.Chem import Draw
+from rdkit.Chem import AllChem
+import os
+print(rdBase.rdkitVersion)
+IPythonConsole.ipython_useSVG=True
 
 if (__name__ == "__main__"):
     sys.path.append("./dataloading")
     from rdkit_to_nx import *
     
     
-def highlight(mol, atidxs, color=[1,0.7,0]):
-    # Prints a depiction of molecule object with list of atoms highlighted 
-    # Can also be done for a list of bonds
+def highlight(mol, atidxs):
     #color : RGB tuple, size 3
-    highlighted = atidxs
+    highlighted = list(atidxs)
+    # Colors for highlight
+    colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}]
+    AllChem.Compute2DCoords(mol)
     plt.figure(figsize = (10,4)) # w*h
-    img = Chem.Draw.MolToImage(mol, highlightAtoms=atidxs, highlightColor=color) # highlight in orange
-    plt.imshow(img)
-    plt.show()
+    img = Draw.MolsToGridImage([mol]*2, legends=['Increase logP','Decrease logP'], highlightAtomLists=highlighted,
+                               highlightAtomColors=colors, highlightBondColors=colors)
     return img
 
 def draw_smi(smiles):
@@ -53,7 +49,7 @@ def draw_smi(smiles):
 def draw_multi(smiles):
     # list of smiles 
     mols=[Chem.MolFromSmiles(s) for s in smiles]
-    img = MolsToGridImage(mols, molsPerRow=7,maxMols=60, subImgSize=(100, 100), legends=[str(i) for i in range(len(mols))])
+    img = Draw.MolsToGridImage(mols, molsPerRow=7,maxMols=75, subImgSize=(100, 100), legends=[str(i) for i in range(len(mols))])
     return img
 
 def num_atoms(s):
