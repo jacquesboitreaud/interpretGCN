@@ -55,10 +55,10 @@ class IntegratedGradients():
              out = self.model(x)
              if(k==0):
                  baseline_out = out.item()
-                 print('Baseline output:',baseline_out)
+                 #print('Baseline output:',baseline_out)
              elif(k==m-1):
                  x_out = out.item()
-                 print('x output:', x_out)
+                 #print('x output:', x_out)
              g=torch.autograd.grad(out, [x.ndata['in'], self.model.layers[0].weight]) # list of gradients wrt inputs
              ig_nodes += g[0]
              #ig_ed += torch.sum(g[1],dim=2)
