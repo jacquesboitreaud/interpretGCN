@@ -32,13 +32,13 @@ from molDataset import Loader, molDataset
 from integratedGrad import IntegratedGradients
 
 
-N_mols=10000
+N_mols=2
 
 
-loader = Loader(csv_path='data/test_set.csv',
+loader = Loader(csv_path='data/logp.csv',
                  n_mols=N_mols,
                  num_workers=0, 
-                 batch_size=100, 
+                 batch_size=2, 
                  shuffled= True,
                  target = 'logP',
                  test_only=True)

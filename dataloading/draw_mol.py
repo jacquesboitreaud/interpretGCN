@@ -19,7 +19,9 @@ from rdkit.RDPaths import RDDataDir
 from rdkit.Chem.Draw import IPythonConsole
 from rdkit.Chem import Draw
 from rdkit.Chem import AllChem
+from rdkit.Chem.Draw import rdMolDraw2D
 import os
+from IPython.display import SVG
 print(rdBase.rdkitVersion)
 IPythonConsole.ipython_useSVG=True
 
@@ -29,15 +31,43 @@ if (__name__ == "__main__"):
     
     
 def highlight(mol, atidxs,labels):
-    #color : RGB tuple, size 3
     highlighted = list(atidxs)
     # Colors for highlight
     colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}]
+    
+    drawer = rdMolDraw2D.MolDraw2DSVG(800,300,400,300)
+    opts = drawer.drawOptions()
+
+    for i in range(mol.GetNumAtoms()):
+        opts.atomLabels[i] = mol.GetAtomWithIdx(i).GetSymbol()+str(i)
     AllChem.Compute2DCoords(mol)
-    plt.figure(figsize = (10,4)) # w*h
-    img = Draw.MolsToGridImage([mol]*2, legends=labels, highlightAtomLists=highlighted,
-                               highlightAtomColors=colors)#, highlightBondColors=colors)
-    return img
+    
+
+    drawer.DrawMolecules([mol]*2, legends=labels, highlightAtoms=highlighted,
+                               highlightAtomColors=colors, highlightBonds=[[],[]])#, highlightBondColors=colors)
+    drawer.FinishDrawing()
+    svg = drawer.GetDrawingText().replace('svg:','')
+    SVG(svg)
+    
+    return svg
+
+def highlight_noid(mol, atidxs,labels):
+    highlighted = list(atidxs)
+    # Colors for highlight
+    colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}]
+    
+    drawer = rdMolDraw2D.MolDraw2DSVG(800,300,400,300)
+
+    AllChem.Compute2DCoords(mol)
+    
+
+    drawer.DrawMolecules([mol]*2, legends=labels, highlightAtoms=highlighted,
+                               highlightAtomColors=colors, highlightBonds=[[],[]])#, highlightBondColors=colors)
+    drawer.FinishDrawing()
+    svg = drawer.GetDrawingText().replace('svg:','')
+    SVG(svg)
+    
+    return svg
 
 def draw_smi(smiles):
     mol=Chem.MolFromSmiles(smiles)

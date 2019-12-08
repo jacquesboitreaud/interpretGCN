@@ -203,7 +203,7 @@ class Loader():
         # valid_loader = DataLoader(dataset=valid_set, shuffle=True, batch_size=self.batch_size,
         #                           num_workers=self.num_workers, collate_fn=collate_block)
         
-        test_loader = DataLoader(dataset=test_set, shuffle=True, batch_size=self.batch_size,
+        test_loader = DataLoader(dataset=test_set, shuffle=not self.test_only, batch_size=self.batch_size,
                                  num_workers=self.num_workers, collate_fn=collate_block)
 
 

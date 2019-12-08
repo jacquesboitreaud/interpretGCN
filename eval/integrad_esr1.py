@@ -33,24 +33,24 @@ from molDataset import Loader, molDataset
 from integratedGrad import IntegratedGradients
 
 
-N_mols=5
+N_mols=3
 
 
-loader = Loader(csv_path='data/herg.csv',
+loader = Loader(csv_path='data/handmade.csv',
                  n_mols=N_mols,
                  num_workers=0, 
-                 batch_size=5, 
-                 shuffled= True,
+                 batch_size=3, 
+                 shuffled= False,
                  target = 'binary',
-                 test_only=True)
+                 test_only=True,
+                 dude=True)
 rem, ram, rchim, rcham = loader.get_reverse_maps()
 _ ,_ , test_loader = loader.get_data()
 
 # # Instantiate IG + load model 
-model_path= 'saved_model_w/herg_lowd.pth'
+model_path= 'saved_model_w/esr1.pth'
 params = pickle.load(open('saved_model_w/params.pickle','rb'))
 params['classifier']=True
-params['features_dim']=14
 
 
 model = Model(**params)
@@ -59,7 +59,7 @@ inteGrad = IntegratedGradients(model)
 
 # ============================================================================
 # Get first molecule of first batch 
-m = 4
+m = 1
 nodes = -1
 
 
@@ -72,7 +72,7 @@ attrib, _ , delta = inteGrad.attrib(x, nodes)
 
 # Attrib to dataframe 
 df = pd.DataFrame(attrib.numpy())
-df.columns = ['charge 0', 'charge +1', 'charge +2', 'charge -1', 'Br','B','C','N','O','F','P','S','Cl','I']
+df.columns = ['charge 0', 'charge +1', 'charge -1', 'H','Br','C','N','O','F','P','S','Cl','I']
 
 
 print(torch.sum(attrib).item(), delta)
@@ -91,7 +91,7 @@ node_contribs = {'atom type':[], 'charge':[]}
 for (i, data) in x.nodes(data=True):
     at_charge, at_type = torch.argmax(data['formal_charge']).item(), torch.argmax(data['atomic_num']).item()
     node_contribs['charge'].append(data['ig'][at_charge].item())
-    node_contribs['atom type'].append(data['ig'][4+at_type].item())
+    node_contribs['atom type'].append(data['ig'][len(rcham)+at_type].item())
         
 # Highlighting : Relative to other contributions 
 """
@@ -117,4 +117,4 @@ plt.xlabel('Atom n°')
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
 # To networkx and plot with colored bonds 
 labels=['+','-']
-img =highlight_noid(mol,(tuple(pos),tuple(neg)),labels)
+img =highlight(mol,(tuple(pos),tuple(neg)),labels)

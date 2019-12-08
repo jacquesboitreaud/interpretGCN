@@ -1,65 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec  5 07:35:43 2019
+Created on Sun Dec  8 08:54:49 2019
 
 @author: jacqu
-
-Integrated gradients attribution to prediction for HERG binding prediction model
-Run in ../
 """
 
-import torch
-import numpy as np 
-import pandas as pd 
-import pickle
-import dgl
-
-import seaborn as sns
-import matplotlib
-from matplotlib import pyplot as plt
-matplotlib.rcParams['figure.dpi'] = 100
-plt.rcParams['figure.figsize'] = 8, 4
-
-
-import sys
-sys.path.append('./dataloading')
-from utils import *
-from draw_mol import *
-from rdkit_to_nx import *
-from viz import *
-
-from rgcn_onehot import Model
-from molDataset import Loader, molDataset
-from integratedGrad import IntegratedGradients
-
-
-N_mols=5
-
-
-loader = Loader(csv_path='data/herg.csv',
-                 n_mols=N_mols,
-                 num_workers=0, 
-                 batch_size=5, 
-                 shuffled= True,
-                 target = 'binary',
-                 test_only=True)
-rem, ram, rchim, rcham = loader.get_reverse_maps()
-_ ,_ , test_loader = loader.get_data()
-
-# # Instantiate IG + load model 
-model_path= 'saved_model_w/herg_lowd.pth'
-params = pickle.load(open('saved_model_w/params.pickle','rb'))
-params['classifier']=True
-params['features_dim']=14
-
-
-model = Model(**params)
-model.load_state_dict(torch.load(model_path))
-inteGrad = IntegratedGradients(model)
-
-# ============================================================================
-# Get first molecule of first batch 
-m = 4
+m = 40
 nodes = -1
 
 
@@ -72,7 +18,7 @@ attrib, _ , delta = inteGrad.attrib(x, nodes)
 
 # Attrib to dataframe 
 df = pd.DataFrame(attrib.numpy())
-df.columns = ['charge 0', 'charge +1', 'charge +2', 'charge -1', 'Br','B','C','N','O','F','P','S','Cl','I']
+df.columns = ['charge 0', 'charge +1', 'charge -1', 'H','Br','C','N','O','F','P','S','Cl','I']
 
 
 print(torch.sum(attrib).item(), delta)
@@ -104,8 +50,8 @@ z_c= (node_contribs['charge']-mean_c)/sd_c
 z_t=np.array(node_contribs['atom type'])
 z_c=np.array(node_contribs['charge'])
 
-pos = [int(i) for i in list(np.where(z_t>0)[0])]
-neg = [int(i) for i in list(np.where(z_t<0)[0])]
+pos = list(np.where(z_t>0)[0])
+neg = list(np.where(z_t<0)[0])
 
 # Plot heatmap of node contributions: 
 plt.figure()
@@ -117,4 +63,4 @@ plt.xlabel('Atom n°')
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
 # To networkx and plot with colored bonds 
 labels=['+','-']
-img =highlight_noid(mol,(tuple(pos),tuple(neg)),labels)
+img =highlight(mol,(tuple(pos),tuple(neg)),labels)

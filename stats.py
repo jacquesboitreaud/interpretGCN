@@ -11,7 +11,7 @@ Run it after running integrad_logp.py
 
 if(__name__=='__main__'):
     
-    N_mols=10000
+    N_mols=5000
     batch_size=100
     # List all substructures
     with open('data/vocab.txt','r') as f:
@@ -46,11 +46,9 @@ if(__name__=='__main__'):
     
     nodes = -1
     for i, (graph, targets) in enumerate(test_loader):
-        
+        print(i)
         graphs = dgl.unbatch(graph)
         for m in range(batch_size):
-            if(m%100==0):
-                print('processing n° ',m)
             x, target = graphs[m], targets[m]
             attrib, _ , delta = inteGrad.attrib(x, nodes)
             
@@ -90,8 +88,10 @@ if(__name__=='__main__'):
     std = sorted(means.items(),key=lambda x: x[1])
     
     sns.barplot(x=np.arange(len(std)), y=[kv[1] for kv in std])
+    
+    highs, lows = std[-25:], std[:25]
 
     fig=plt.figure(dpi=300, figsize=(20,20))
-    img=draw_multi([g[0] for g in std])
-    img.save('substructures.png')
+    img=draw_multi([g[0] for g in highs])
+    img2=draw_multi([g[0] for g in lows])
         
