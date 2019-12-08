@@ -52,7 +52,8 @@ class molDataset(Dataset):
                 n_mols = 100,
                 debug=False, 
                 shuffled=False,
-                target ='LogP'):
+                target ='LogP',
+                dude=False):
         
         if(n_mols!=None):
             self.df = pd.read_csv(csv_path, nrows=n_mols)
@@ -67,7 +68,11 @@ class molDataset(Dataset):
         print(f'Labels retrieved for the following {len(self.targets)} targets: {self.targets}')
         
         # Load edge map
-        with open('edges_and_nodes_map.pickle',"rb") as f:
+        if(dude):
+            mapspath='edges_and_nodes_map_DUDE.pickle'
+        else:
+            mapspath='edges_and_nodes_map.pickle'
+        with open(mapspath,"rb") as f:
             self.edge_map= pickle.load(f)
             self.at_map = pickle.load(f)
             self.chi_map= pickle.load(f)
@@ -134,7 +139,8 @@ class Loader():
                  num_workers=20,
                  debug=False,
                  shuffled=False,
-                 test_only=False):
+                 test_only=False,
+                 dude=False):
         """
         Wrapper for test loader, train loader 
         Uncomment to add validation loader 
@@ -148,7 +154,8 @@ class Loader():
         self.dataset = molDataset(csv_path, n_mols,
                                   debug=debug,
                                   shuffled=shuffled,
-                                  target = target)
+                                  target = target,
+                                  dude=dude)
         
         self.num_edge_types, self.num_atom_types = self.dataset.num_edge_types, self.dataset.num_atom_types
         self.num_charges= self.dataset.num_charges

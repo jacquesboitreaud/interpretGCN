@@ -28,15 +28,15 @@ if (__name__ == "__main__"):
     from rdkit_to_nx import *
     
     
-def highlight(mol, atidxs):
+def highlight(mol, atidxs,labels):
     #color : RGB tuple, size 3
     highlighted = list(atidxs)
     # Colors for highlight
     colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}]
     AllChem.Compute2DCoords(mol)
     plt.figure(figsize = (10,4)) # w*h
-    img = Draw.MolsToGridImage([mol]*2, legends=['Increase logP','Decrease logP'], highlightAtomLists=highlighted,
-                               highlightAtomColors=colors, highlightBondColors=colors)
+    img = Draw.MolsToGridImage([mol]*2, legends=labels, highlightAtomLists=highlighted,
+                               highlightAtomColors=colors)#, highlightBondColors=colors)
     return img
 
 def draw_smi(smiles):

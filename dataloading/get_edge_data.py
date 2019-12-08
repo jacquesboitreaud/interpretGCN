@@ -21,7 +21,7 @@ from rdkit_to_nx import smiles_to_nx
 def main():
     freeze_support()
     # ADD NROWS TO PARSE JUST A BUNCH OF SMILES;
-    data = pd.read_csv('../../data/chembl_18t.csv')
+    data = pd.read_csv('../data/ESR1_2classes.csv')
     smiles = list(data['can'])
     
     # EDGE attributes
@@ -66,7 +66,7 @@ def main():
     
     #np.save('../edge_map.npy',edge_map)
     
-    with open("../edge_and_nodes_map","wb") as f:
+    with open("../edge_and_nodes_map_DUDE","wb") as f:
         pickle.dump(edge_types, f)
         pickle.dump(atom_types, f)
         pickle.dump(chiral_types, f)

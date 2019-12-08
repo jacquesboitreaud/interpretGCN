@@ -19,7 +19,7 @@ from rdkit import Chem
 
 import sys
 sys.path.append('./dataloading')
-from rgcn import Model
+from rgcn_onehot import Model
 from molDataset import Loader
 
 from utils import *
@@ -42,7 +42,7 @@ if(__name__=='__main__'):
     # Get vocabulary of substructures 
     vocab_dict = {s:i for (i,s) in enumerate(vocab)}
     
-    loader = Loader(csv_path='data/HERG_dataset.csv',
+    loader = Loader(csv_path='data/HERG_2classes.csv',
                      n_mols=N_mols,
                      num_workers=0, 
                      batch_size=10, 
@@ -53,8 +53,9 @@ if(__name__=='__main__'):
     _ ,_ , test_loader = loader.get_data()
     
     # Load model 
-    model_path= 'saved_model_w/herg.pth'
+    model_path= 'saved_model_w/herg_lowd.pth'
     params = pickle.load(open('saved_model_w/params.pickle','rb'))
+    params['classifier']=True
     model = Model(**params)
     model.load_state_dict(torch.load(model_path))
     

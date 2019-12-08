@@ -17,7 +17,7 @@ graph, target = next(iter(test_loader))
 graphs = dgl.unbatch(graph)
 x, target = graphs[m], target[m]
 out = model(graph)[m]
-print(f'Predicted logp is {out.item()}, true is {target.item()}')
+print(f'Output is {out.item()}, target is {target.item()}')
 attrib, _ , delta = inteGrad.attrib(x, nodes)
 
 # Attrib to dataframe 
@@ -59,8 +59,9 @@ df2=pd.DataFrame.from_dict({'atom type':z_t, 'charge':z_c})
 sns.heatmap(df2.transpose(), annot=False, vmin=-1, vmax=1, center= 0, cmap= 'coolwarm')
 plt.xlabel('Atom n°')
 
-#TODO :adapt nx to mol function so that it can handle one-hot vectors for features !!!!!!!!!!!!!!!
+# Drawing
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
 # To networkx and plot with colored bonds 
-img =highlight(mol,(tuple(pos),tuple(neg)))
+labels=['Increase logP','Decrease logP']
+img =highlight(mol,(tuple(pos),tuple(neg)),labels)
 img
