@@ -131,8 +131,8 @@ if (__name__ == "__main__"):
                 
                 
             print(f'Validation loss at epoch {epoch}, per batch: {t_loss/len(test_loader)}')
-            logs_dict['test_mse'].append(t_loss/len(test_loader))
-            logs_dict['train_mse'].append(epoch_loss/len(train_loader))
+            logs_dict['test_bce'].append(t_loss/len(test_loader))
+            logs_dict['train_bce'].append(epoch_loss/len(train_loader))
             
         if(epoch%5==0):
             #Save model : checkpoint      

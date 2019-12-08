@@ -11,7 +11,7 @@ Run it after running integrad_logp.py
 
 if(__name__=='__main__'):
     
-    N_mols=100
+    N_mols=10000
     batch_size=100
     # List all substructures
     with open('data/vocab.txt','r') as f:
@@ -24,7 +24,7 @@ if(__name__=='__main__'):
     vocab_dict = {s:i for (i,s) in enumerate(vocab)}
     
     # Load model, pass molecules, get attributions, compute zscores
-    loader = Loader(csv_path='data/CHEMBL_18t.csv',
+    loader = Loader(csv_path='data/test_set.csv',
                  n_mols=N_mols,
                  num_workers=0, 
                  batch_size=batch_size, 
@@ -38,6 +38,7 @@ if(__name__=='__main__'):
     model_path= 'saved_model_w/logp_lowd.pth'
     params = pickle.load(open('saved_model_w/params.pickle','rb'))
     params['classifier']=False
+    params['features_dim']=14
     
     model = Model(**params)
     model.load_state_dict(torch.load(model_path))
@@ -48,7 +49,8 @@ if(__name__=='__main__'):
         
         graphs = dgl.unbatch(graph)
         for m in range(batch_size):
-            print('processing n° ',m)
+            if(m%100==0):
+                print('processing n° ',m)
             x, target = graphs[m], targets[m]
             attrib, _ , delta = inteGrad.attrib(x, nodes)
             
@@ -81,6 +83,7 @@ if(__name__=='__main__'):
             
     # LOOK AT SUBSTRUCTURES:
     ctr = {k:v for (k,v) in ctr.items() if occur[k]>0}
+    np.save('stats_dict.npy',ctr)
     means = {k:np.mean(v)/num_atoms(k) for (k,v) in ctr.items()}
     
     # Non zero freqs : 

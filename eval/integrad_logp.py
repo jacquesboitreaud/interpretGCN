@@ -32,10 +32,10 @@ from molDataset import Loader, molDataset
 from integratedGrad import IntegratedGradients
 
 
-N_mols=200
+N_mols=10000
 
 
-loader = Loader(csv_path='data/CHEMBL_18t.csv',
+loader = Loader(csv_path='data/test_set.csv',
                  n_mols=N_mols,
                  num_workers=0, 
                  batch_size=100, 
@@ -49,12 +49,13 @@ _ ,_ , test_loader = loader.get_data()
 model_path= 'saved_model_w/logp_lowd.pth'
 params = pickle.load(open('saved_model_w/params.pickle','rb'))
 params['classifier']=False
+params['features_dim']=14
 
 
 model = Model(**params)
 model.load_state_dict(torch.load(model_path))
 inteGrad = IntegratedGradients(model)
-
+"""
 # ============================================================================
 # Get first molecule of first batch 
 m = 0
@@ -108,3 +109,4 @@ sns.heatmap(df2.transpose(), annot=False, vmin=-1, vmax=1, center= 0, cmap= 'coo
 plt.xlabel('Atom n°')
 
 # For molecule plot with highlights, run plots.py
+"""
