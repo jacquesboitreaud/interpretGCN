@@ -117,5 +117,3 @@ if(__name__=='__main__'):
 
     fig=plt.figure(dpi=300, figsize=(20,20))
     img=draw_multi([g[0] for g in goods])
-    imgplot=plt.imshow(img)
-    img.save('substructures.png')

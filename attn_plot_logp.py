@@ -9,7 +9,7 @@ To obtain individual plots for one molecule. Run it after running integrad_logp.
 
 
 # Get first molecule of first batch 
-m = 3
+m = 0
 nodes = -1
 
 
@@ -50,19 +50,18 @@ sd_t, sd_c = np.std(node_contribs['atom type']), np.std(node_contribs['charge'])
 
 mean_sum, sd_sum = np.mean(node_contribs['sum']), np.std(node_contribs['sum'])
 
-"""
+
 #zscores
 z_t= (node_contribs['atom type']-mean_t)/sd_t
 z_c= (node_contribs['charge']-mean_c)/sd_c
 z_s =(node_contribs['sum']-mean_sum)/sd_sum
-"""
 
+"""
 #plain
 z_t= np.array(node_contribs['atom type'])
 z_c= np.array(node_contribs['charge'])
 z_s =np.array(node_contribs['sum'])
-
-
+"""
 pos = [int(i) for i in list(np.where(z_s>0)[0])]
 neg = [int(i) for i in list(np.where(z_s<0)[0])]
 
@@ -75,6 +74,6 @@ plt.xlabel('Atom n°')
 # Drawing
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
 # To networkx and plot with colored bonds 
-labels=[' ',' ']
-img =highlight_noid(mol,(tuple(pos),tuple(neg)),labels)
+labels=['Increase logP','Decrease logP']
+img =highlight_att_noid(mol,(5,33,3,31,14,11,28,16,9,22,23,24,20,18),labels)
 img

@@ -12,6 +12,7 @@ import dgl
 import matplotlib.pyplot as plt
 
 from rdkit import Chem
+from rdkit.Chem import rdFMCS
 from rdkit.Chem import ChemicalFeatures
 from rdkit import rdBase
 from rdkit.RDPaths import RDDocsDir
@@ -33,7 +34,7 @@ if (__name__ == "__main__"):
 def highlight(mol, atidxs,labels):
     highlighted = list(atidxs)
     # Colors for highlight
-    colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}]
+    colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.67,0.84,0.9) for i in highlighted[1]}]
     
     drawer = rdMolDraw2D.MolDraw2DSVG(800,300,400,300)
     opts = drawer.drawOptions()
@@ -54,7 +55,7 @@ def highlight(mol, atidxs,labels):
 def highlight_noid(mol, atidxs,labels):
     highlighted = list(atidxs)
     # Colors for highlight
-    colors=[{i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}]
+    colors={i:(1,0,0) for i in highlighted[0]}, {i:(0.2,0,1) for i in highlighted[1]}
     
     drawer = rdMolDraw2D.MolDraw2DSVG(800,300,400,300)
 
@@ -68,6 +69,45 @@ def highlight_noid(mol, atidxs,labels):
     SVG(svg)
     
     return svg
+
+def highlight_att(mol, atidxs,labels):
+    highlighted = list(atidxs)
+    # Colors for highlight
+    colors={i:(1,0.5,0) for i in highlighted} 
+    
+    drawer = rdMolDraw2D.MolDraw2DSVG(400,400)
+    opts = drawer.drawOptions()
+
+    for i in range(mol.GetNumAtoms()):
+        opts.atomLabels[i] = mol.GetAtomWithIdx(i).GetSymbol()+str(i)
+    AllChem.Compute2DCoords(mol)
+    
+
+    drawer.DrawMolecule(mol, highlightAtoms=highlighted,
+                               highlightAtomColors=colors, highlightBonds=[])#, highlightBondColors=colors)
+    drawer.FinishDrawing()
+    svg = drawer.GetDrawingText().replace('svg:','')
+    SVG(svg)
+    
+    return svg
+
+def highlight_att_noid(mol, atidxs,labels):
+    highlighted = list(atidxs)
+    # Colors for highlight
+    colors={i:(1,0.5,0) for i in highlighted} 
+    
+    drawer = rdMolDraw2D.MolDraw2DSVG(400,400)
+
+    AllChem.Compute2DCoords(mol)
+    
+    drawer.DrawMolecule(mol, highlightAtoms=highlighted,
+                               highlightAtomColors=colors, highlightBonds=[])#, highlightBondColors=colors)
+    drawer.FinishDrawing()
+    svg = drawer.GetDrawingText().replace('svg:','')
+    SVG(svg)
+    
+    return svg
+
 
 def draw_smi(smiles):
     mol=Chem.MolFromSmiles(smiles)

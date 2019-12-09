@@ -36,7 +36,7 @@ from integratedGrad import IntegratedGradients
 N_mols=3
 
 
-loader = Loader(csv_path='data/handmade.csv',
+loader = Loader(csv_path='data/esr1.csv',
                  n_mols=N_mols,
                  num_workers=0, 
                  batch_size=3, 
@@ -59,7 +59,7 @@ inteGrad = IntegratedGradients(model)
 
 # ============================================================================
 # Get first molecule of first batch 
-m = 1
+m = 2
 nodes = -1
 
 
@@ -104,14 +104,16 @@ z_c= (node_contribs['charge']-mean_c)/sd_c
 z_t=np.array(node_contribs['atom type'])
 z_c=np.array(node_contribs['charge'])
 
-pos = [int(i) for i in list(np.where(z_t>0)[0])]
-neg = [int(i) for i in list(np.where(z_t<0)[0])]
+pos = [int(i) for i in list(np.where(z_c+z_t>0)[0])]
+neg = [int(i) for i in list(np.where(z_c+z_t<0)[0])]
 
 # Plot heatmap of node contributions: 
 plt.figure()
-df2=pd.DataFrame.from_dict({'atom type':z_t, 'charge':z_c})
-sns.heatmap(df2.transpose(), annot=False, vmin=-1, vmax=1, center= 0, cmap= 'coolwarm')
+#df2=pd.DataFrame.from_dict({'atom type':z_t, 'charge':z_c, 'sum':z_t+z_c})
+df2=pd.DataFrame.from_dict({'Attribution':z_t+z_c})
+sns.barplot(x=np.arange(df2.shape[0]),y=list(2*df2['Attribution']), color='lightBlue')
 plt.xlabel('Atom n°')
+plt.ylabel('Attribution')
 
 # For molecule plot with highlights, 
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
