@@ -4,7 +4,7 @@ Created on Wed Nov  6 18:44:04 2019
 
 @author: jacqu
 
-RGCN model to predict toxicity 
+RGCN model to predict toxicity (Binary label) on HERG. 
 
 """
 import sys

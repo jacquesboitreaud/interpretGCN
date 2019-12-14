@@ -4,7 +4,7 @@ Created on Wed Nov  6 18:44:04 2019
 
 @author: jacqu
 
-RGCN model to predict molecular LogP 
+RGCN model to predict molecular LogP (Regression)
 
 """
 import sys
@@ -18,7 +18,7 @@ import torch.nn.functional as F
 
 if (__name__ == "__main__"):
     sys.path.append("./dataloading")
-    from rgcn_onehot import Model
+    from agcn import Model
     from molDataset import molDataset, Loader
     from utils import *
     from viz import *
@@ -26,20 +26,20 @@ if (__name__ == "__main__"):
     from rdkit_to_nx import *
     
     # config
-    n_epochs = 100 # epochs to train
-    batch_size = 128
+    n_epochs = 60 # epochs to train
+    batch_size = 64
     display_test=False
-    SAVE_FILENAME='./saved_model_w/logp_lowd.pth'
+    SAVE_FILENAME='./saved_model_w/logp_attn.pth'
     model_path= 'saved_model_w/logp.pth'
-    log_path='./saved_model_w/logs_logp.npy'
+    log_path='./saved_model_w/logs_attn.npy'
     
     load_model = False
 
     
     #Load train set and test set
     loaders = Loader(csv_path='data/moses_train.csv',
-                     n_mols=1000000,
-                     num_workers=0, 
+                     n_mols=800000,
+                     num_workers=8, 
                      batch_size=batch_size, 
                      shuffled= True,
                      target = 'logP')
@@ -55,7 +55,7 @@ if (__name__ == "__main__"):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     parallel=False
     params ={'features_dim':loaders.dataset.emb_size, #node embedding dimension
-             'h_dim':16,
+             'h_dim':8,
              'out_dim':4,
              'num_rels':loaders.num_edge_types,
              'num_bases' :-1,
@@ -132,7 +132,7 @@ if (__name__ == "__main__"):
             logs_dict['test_mse'].append(t_loss/len(test_loader))
             logs_dict['train_mse'].append(epoch_loss/len(train_loader))
             
-        if(epoch%5==0):
+        if(epoch%2==0):
             #Save model : checkpoint      
             torch.save( model.state_dict(), SAVE_FILENAME)
             pickle.dump(logs_dict, open(log_path,'wb'))

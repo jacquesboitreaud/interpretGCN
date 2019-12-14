@@ -5,8 +5,8 @@ Created on Thu Nov 28 10:52:46 2019
 @author: jacqu
 
 Distribution of attention over substructures, over the test set 
-
 Run in working dir ../
+
 """
 import torch
 import torch.nn.functional as F
@@ -21,7 +21,7 @@ from rdkit import Chem
 
 import sys
 sys.path.append('dataloading')
-from rgcn import Model
+from agcn import Model
 from molDataset import Loader
 
 from utils import *
@@ -37,8 +37,9 @@ if(__name__=='__main__'):
     with open('data/vocab.txt','r') as f:
         vocab = f.readlines()
         vocab = [s.rstrip('\n') for s in vocab]
-        
-    chem_att = {v: [0,0] for v in vocab} # dict of tuples (attention received, count occurences in set)
+    
+    # dict of tuples (attention received, count occurences in set)
+    chem_att = {v: [0,0] for v in vocab} 
     
     
     # Get vocabulary of substructures 
@@ -55,7 +56,7 @@ if(__name__=='__main__'):
     _ ,_ , test_loader = loader.get_data()
     
     # Load model 
-    model_path= 'saved_model_w/logp.pth'
+    model_path= 'saved_model_w/logp_attn.pth'
     params = pickle.load(open('saved_model_w/params.pickle','rb'))
     model = Model(**params)
     model.load_state_dict(torch.load(model_path))
@@ -109,11 +110,12 @@ if(__name__=='__main__'):
     freqs = {k: v[0]/(v[1]*num_atoms(k)) for (k,v) in chem_att.items() if v[1]>10}
     avg_loss = t_loss / N_mols
     
-    # Non zero freqs : 
+    # Sort substructures by increasing coefficient 
     std = sorted(freqs.items(), key=lambda x: x[1])
-    goods = [kv for kv in std if 'O' in kv[0] or 'N' in kv[0] or 'F' in kv[0] or 'Cl' in kv[0] or 'Br' in kv[0]]
-    
-    sns.barplot(x=np.arange(len(goods)), y=[kv[1] for kv in goods])
-
+    # Barplot of distribution 
+    sns.barplot(x=np.arange(len(std)), y=[kv[1] for kv in std])
+    # Drawing substructures 
     fig=plt.figure(dpi=300, figsize=(20,20))
-    img=draw_multi([g[0] for g in goods])
+    img=draw_multi([g[0] for g in std])
+    
+    #TODO Random permutation test 

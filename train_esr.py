@@ -4,7 +4,7 @@ Created on Wed Nov  6 18:44:04 2019
 
 @author: jacqu
 
-RGCN model to predict ESR1 binding
+RGCN model to predict ESR1 binding (binary label)
 
 """
 import sys
