@@ -58,9 +58,11 @@ class molDataset(Dataset):
         if(n_mols!=None):
             self.df = pd.read_csv(csv_path, nrows=n_mols)
             self.n = n_mols
+            print('columns:', self.df.columns)
         else:
             self.df = pd.read_csv(csv_path)
             self.n = self.df.shape[0]
+            print('columns:', self.df.columns)
         
         # Choose targets for supervision: 
         #self.targets = np.load('../targets_chembl.npy') # load list of targets
