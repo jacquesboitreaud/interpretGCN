@@ -32,14 +32,15 @@ from viz import *
 
 if(__name__=='__main__'):
     
-    N_mols=100
+    N_mols=10000
     # List all substructures
     with open('data/vocab.txt','r') as f:
         vocab = f.readlines()
         vocab = [s.rstrip('\n') for s in vocab]
     
     # dict of tuples (attention received, count occurences in set)
-    chem_att = {v: [0,0] for v in vocab} 
+    chem_att = {v: [0,0] for v in vocab}
+    resi_df = {'true':[], 'pred':[]}
     
     
     # Get vocabulary of substructures 
@@ -48,8 +49,8 @@ if(__name__=='__main__'):
     loader = Loader(csv_path='data/test_set.csv',
                      n_mols=N_mols,
                      num_workers=0, 
-                     batch_size=2, 
-                     shuffled= True,
+                     batch_size=64, 
+                     shuffled= False,
                      target = 'logP',
                      test_only=True)
     rem, ram, rchim, rcham = loader.get_reverse_maps()
@@ -78,6 +79,8 @@ if(__name__=='__main__'):
                 graphs = dgl.unbatch(graph)
                 
                 for i in range(len(graphs)): # for each molecule in batch
+                    resi_df['true'].append(target.cpu()[i].item())
+                    resi_df['pred'].append(out.cpu()[i].item())
                     g0=graphs[i]
                     n_nodes = len(g0.nodes)
                     att= get_attention_map(g0, src_nodes=g0.nodes(), dst_nodes=g0.nodes(), h=1)
@@ -115,7 +118,16 @@ if(__name__=='__main__'):
     # Barplot of distribution 
     sns.barplot(x=np.arange(len(std)), y=[kv[1] for kv in std])
     # Drawing substructures 
-    fig=plt.figure(dpi=300, figsize=(20,20))
+    fig=plt.figure(dpi=300, figsize=(25,25))
     img=draw_multi([g[0] for g in std])
     
+    #np.save('../results/sorted_freqs.npy',std)
+    #np.save('../results/residuals.npy',resi_df)
+    
     #TODO Random permutation test 
+    
+    # Residuals plot: 
+    sns.scatterplot(resi_df['true'], resi_df['pred'])
+    plt.plot(np.arange(-3,7,1),np.arange(-3,7,1), color='r')
+    plt.xlim(-3,6)
+    plt.ylim(-3,6)

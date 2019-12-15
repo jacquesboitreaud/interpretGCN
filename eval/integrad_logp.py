@@ -27,15 +27,15 @@ from draw_mol import *
 from rdkit_to_nx import *
 from viz import *
 
-from rgcn_onehot import Model
+from agcn import Model
 from molDataset import Loader, molDataset
 from integratedGrad import IntegratedGradients
 
 
-N_mols=4
+N_mols=10000
 
 
-loader = Loader(csv_path='data/logp.csv',
+loader = Loader(csv_path='data/test_set.csv',
                  n_mols=N_mols,
                  num_workers=0, 
                  batch_size=4, 
@@ -46,10 +46,9 @@ rem, ram, rchim, rcham = loader.get_reverse_maps()
 _ ,_ , test_loader = loader.get_data()
 
 # # Instantiate IG + load model 
-model_path= 'saved_model_w/logp_lowd.pth'
+model_path= 'saved_model_w/logp_attn.pth'
 params = pickle.load(open('saved_model_w/params.pickle','rb'))
 params['classifier']=False
-params['features_dim']=14
 
 
 model = Model(**params)

@@ -10,7 +10,7 @@ Run it after running integrad_logp.py
 
 if(__name__=='__main__'):
     
-    N_mols=5000
+    N_mols=10000
     batch_size=100
     # List all substructures
     with open('data/vocab.txt','r') as f:
@@ -34,10 +34,9 @@ if(__name__=='__main__'):
     _ ,_ , test_loader = loader.get_data()
     
     # # Instantiate IG + load model 
-    model_path= 'saved_model_w/logp_lowd.pth'
+    model_path= 'saved_model_w/logp_attn.pth'
     params = pickle.load(open('saved_model_w/params.pickle','rb'))
     params['classifier']=False
-    params['features_dim']=14
     
     model = Model(**params)
     model.load_state_dict(torch.load(model_path))

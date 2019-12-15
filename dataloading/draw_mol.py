@@ -24,7 +24,7 @@ from rdkit.Chem.Draw import rdMolDraw2D
 import os
 from IPython.display import SVG
 print(rdBase.rdkitVersion)
-IPythonConsole.ipython_useSVG=True
+IPythonConsole.ipython_useSVG=False
 
 if (__name__ == "__main__"):
     sys.path.append("./dataloading")

@@ -55,11 +55,11 @@ if (__name__ == "__main__"):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     parallel=False
     params ={'features_dim':loaders.dataset.emb_size, #node embedding dimension
-             'h_dim':8,
-             'out_dim':4,
+             'h_dim':2,
+             'out_dim':2,
              'num_rels':loaders.num_edge_types,
              'num_bases' :-1,
-             'num_hidden_layers':2}
+             'num_hidden_layers':0}
     pickle.dump(params, open('saved_model_w/params.pickle','wb'))
 
     model = Model(**params).to(device)
