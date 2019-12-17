@@ -9,7 +9,7 @@ To obtain individual plots for one molecule. Run it after running integrad_logp.
 
 
 # Get first molecule of first batch 
-m = 3
+m = 0
 nodes = -1
 
 
@@ -18,7 +18,7 @@ graphs = dgl.unbatch(graph)
 x, target = graphs[m], target[m]
 out = model(graph)[m]
 print(f'Output is {out.item()}, target is {target.item()}')
-attrib, _ , delta = inteGrad.attrib(x, nodes)
+attrib, _ , out, baseline = inteGrad.attrib(x, nodes)
 
 # Attrib to dataframe 
 df = pd.DataFrame(attrib.numpy())
@@ -74,6 +74,7 @@ plt.xlabel('Atom n°')
 
 # Drawing
 mol=nx_to_mol(x,rem, ram, rchim, rcham )
+
 # To networkx and plot with colored bonds 
 labels=[' ',' ']
 img =highlight_noid(mol,(tuple(pos),tuple(neg)),labels)

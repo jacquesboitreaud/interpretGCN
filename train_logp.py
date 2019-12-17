@@ -6,6 +6,9 @@ Created on Wed Nov  6 18:44:04 2019
 
 RGCN model to predict molecular LogP (Regression)
 
+Dataset: molecularsets training and test set 
+https://github.com/molecularsets/moses/tree/master/data
+
 """
 import sys
 import torch

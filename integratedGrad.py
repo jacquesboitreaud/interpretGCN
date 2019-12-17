@@ -4,7 +4,7 @@ Created on Thu Dec  5 06:47:06 2019
 
 @author: jacqu
 
-Integrated gradients class to compute IG 
+Integrated gradients class to compute IG attributions 
 """
 import torch
 import torch.autograd
@@ -19,7 +19,7 @@ class IntegratedGradients():
         self.model.train()
         
     def attrib(self, x, nodes_idx):
-        # Attribution for a node or list of nodes
+        # Attribution for a node or list of nodes (-1 => all nodes in x )
         if(nodes_idx==-1):
             nodes_idx=[i for i in range(len(x.nodes()))]
         elif(type(nodes_idx)==int):
@@ -29,7 +29,7 @@ class IntegratedGradients():
         #ig_ed = torch.zeros(self.n_rels, self.features_dim)
         
         # number of rectangles for integral approx : 
-        m=100
+        m=50
         
         # Loop to compute integrated grad 
         x_h = x.ndata['h'].detach().numpy()
@@ -43,7 +43,7 @@ class IntegratedGradients():
                  
                  # interpolate : 0 + (k/m) * embedding
                  x.ndata['h']=0 + alpha* torch.tensor(x_h)
-                 self.model.layers[0].weight = torch.nn.Parameter(torch.tensor(0 + alpha*x_e))
+                 x.edata['one_hot']=alpha*x.edata['one_hot']
                  #print(self.model.layers[0].weight)
                  #print(x.ndata['h'][i]) 
                      
@@ -64,8 +64,10 @@ class IntegratedGradients():
              #ig_ed += torch.sum(g[1],dim=2)
              
              #print(g[lookup_indexes,])
-        ig_nodes, ig_ed = (x.ndata['in']-0)* ig_nodes/m, 0
-        return ig_nodes.detach(), ig_ed, x_out-baseline_out
+        ig_nodes = (x.ndata['in']-0)* ig_nodes/m
+        
+        # Return attributions, 0 (change if we split attributions in several terms), out, baseline out.
+        return ig_nodes.detach(), 0, x_out, baseline_out
     
 
         

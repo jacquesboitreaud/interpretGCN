@@ -4,13 +4,12 @@ Created on Mon Apr 22 11:44:23 2019
 
 @author: jacqu
 
-RGCN to learn node embeddings on RNA graphs , with edge labels 
+GCN to learn node embeddings on RNA graphs , with edge labels 
+- 1 attention layer 
+- num_hidden_layers + 2 rgcn layers
+
+source : 
 https://docs.dgl.ai/tutorials/models/1_gnn/4_rgcn.html#sphx-glr-tutorials-models-1-gnn-4-rgcn-py
-
-Same model except Input RGCNLayer takes node features (one-hot) as message ; 
-
-Same embedding lookup for edges weights
-
 
 
 """

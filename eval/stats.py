@@ -10,7 +10,7 @@ Run it after running integrad_logp.py
 
 if(__name__=='__main__'):
     
-    N_mols=10000
+    N_mols=5000
     batch_size=100
     # List all substructures
     with open('data/vocab.txt','r') as f:
@@ -19,6 +19,10 @@ if(__name__=='__main__'):
         
     ctr = {v: [] for v in vocab} # dict of lists 
     occur = {v: 0 for v in vocab}
+    resi_df = {'true':[], 'pred':[]}
+    
+    
+    
     # Get vocabulary of substructures 
     vocab_dict = {s:i for (i,s) in enumerate(vocab)}
     
@@ -48,7 +52,10 @@ if(__name__=='__main__'):
         graphs = dgl.unbatch(graph)
         for m in range(batch_size):
             x, target = graphs[m], targets[m]
-            attrib, _ , delta = inteGrad.attrib(x, nodes)
+            attrib, _ , out, baseline = inteGrad.attrib(x, nodes)
+            
+            resi_df['true'].append(target.cpu().item())
+            resi_df['pred'].append(out)
             
             # Select + and - edges (atoms):
             x.ndata['ig']=attrib # add attributions as a node feature
@@ -79,12 +86,14 @@ if(__name__=='__main__'):
             
     # LOOK AT SUBSTRUCTURES:
     ctr = {k:v for (k,v) in ctr.items() if occur[k]>0}
-    np.save('stats_dict.npy',ctr)
+    np.save('results/logp_contribs.npy',ctr)
+    np.save('results/residuals.npy',resi_df)
+    
+    # freqs 
     means = {k:np.mean(v)/num_atoms(k) for (k,v) in ctr.items()}
-    
-    # Non zero freqs : 
+    # Non zero only : 
     std = sorted(means.items(),key=lambda x: x[1])
-    
+    """
     sns.barplot(x=np.arange(len(std)), y=[kv[1] for kv in std])
     
     highs, lows = std[-25:], std[:25]
@@ -92,4 +101,5 @@ if(__name__=='__main__'):
     fig=plt.figure(dpi=300, figsize=(20,20))
     img=draw_multi([g[0] for g in highs])
     img2=draw_multi([g[0] for g in lows])
+    """
         

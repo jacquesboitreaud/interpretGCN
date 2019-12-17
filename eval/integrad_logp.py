@@ -32,7 +32,7 @@ from molDataset import Loader, molDataset
 from integratedGrad import IntegratedGradients
 
 
-N_mols=10000
+N_mols=5000
 
 
 loader = Loader(csv_path='data/test_set.csv',

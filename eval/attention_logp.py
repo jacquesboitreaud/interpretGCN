@@ -32,7 +32,7 @@ from viz import *
 
 if(__name__=='__main__'):
     
-    N_mols=10000
+    N_mols=1000
     # List all substructures
     with open('data/vocab.txt','r') as f:
         vocab = f.readlines()
@@ -49,7 +49,7 @@ if(__name__=='__main__'):
     loader = Loader(csv_path='data/test_set.csv',
                      n_mols=N_mols,
                      num_workers=0, 
-                     batch_size=64, 
+                     batch_size=100, 
                      shuffled= False,
                      target = 'logP',
                      test_only=True)
@@ -110,7 +110,7 @@ if(__name__=='__main__'):
     #Compute frequencies for substructures in the dataset 
     # Divide by number of atoms in each substructure
     
-    freqs = {k: v[0]/(v[1]*num_atoms(k)) for (k,v) in chem_att.items() if v[1]>10}
+    freqs = {k: v[0]/(v[1]*num_atoms(k)) for (k,v) in chem_att.items() if v[1]>0}
     avg_loss = t_loss / N_mols
     
     # Sort substructures by increasing coefficient 
@@ -126,8 +126,10 @@ if(__name__=='__main__'):
     
     #TODO Random permutation test 
     
+    """
     # Residuals plot: 
     sns.scatterplot(resi_df['true'], resi_df['pred'])
     plt.plot(np.arange(-3,7,1),np.arange(-3,7,1), color='r')
     plt.xlim(-3,6)
     plt.ylim(-3,6)
+    """

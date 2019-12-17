@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Nov 23 16:02:53 2019
+Created on Mon Dec 16 08:07:32 2019
 
 @author: jacqu
-
-Build specific dataset for precise tasks:
-    - compound selectivity between 2 targets 
-    - predicting binding affinity for compounds assayed in CHEMBL 
 """
 
 import pandas as pd 
-import numpy as np
 
-df = pd.read_csv('../data/HERG_2classes.csv')
+df = pd.read_csv('../data/test_set.csv')
 
-b=list(df['pIC50'])
-b= [int(x>0) for x in b]
+high = df[df['logP']>4.5]
+low = df[df['logP']<-1]
 
-df['binary']=b
+high.to_csv('../data/high_logp.csv')
 
-df.to_csv('../data/HERG_2classes.csv')
+low.to_csv('../data/low_logp.csv')
